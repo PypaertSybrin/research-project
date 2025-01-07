@@ -4,6 +4,7 @@ import chromadb
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import dotenv
+from pydantic import BaseModel
 
 # Initialize FastAPI
 app = FastAPI()
@@ -16,6 +17,9 @@ client = chromadb.PersistentClient(path=chromadb_path)
 collection_name = "recipes"
 collection = client.get_collection(name=collection_name)
 
+class QueryRequest(BaseModel):
+    message: str
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -27,12 +31,14 @@ def health_check():
     """
     return {"status": "ok"}
 
-@app.post("/query_recipes/")
-def query_recipes(query: str):
+@app.post("/query_recipes")
+def query_recipes(query_request: QueryRequest):
     """
     Query recipes based on the input text.
     """
     try:
+        print('ccccccccccccccccccccccc')
+        query = query_request.message
         results = collection.query(query_texts=query, n_results=3)
         doc_results = results['documents'][0]
         score_results = results['distances'][0]
@@ -43,7 +49,8 @@ def query_recipes(query: str):
                 "Title": t['Title'],
                 "Ingredients": t['Ingredients'],
                 "Instructions": t['Instructions'],
-                "Score": score_results[idx]
+                "Score": score_results[idx],
+                "ImageUrl": t['ImageUrl']
             })
         return JSONResponse(content={"recipes": recipes})
     except Exception as e:
