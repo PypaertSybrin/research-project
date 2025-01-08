@@ -37,20 +37,21 @@ def query_recipes(query_request: QueryRequest):
     Query recipes based on the input text.
     """
     try:
-        print('ccccccccccccccccccccccc')
         query = query_request.message
-        results = collection.query(query_texts=query, n_results=3)
+        results = collection.query(query_texts=query, n_results=1)
         doc_results = results['documents'][0]
+        meta_results = results['metadatas'][0]
         score_results = results['distances'][0]
         recipes = []
         for idx, i in enumerate(doc_results):
             t = json.loads(i)
             recipes.append({
-                "Title": t['Title'],
+                "Name": t['Name'],
+                "Description": t['Description'],
                 "Ingredients": t['Ingredients'],
-                "Instructions": t['Instructions'],
                 "Score": score_results[idx],
-                "ImageUrl": t['ImageUrl']
+                "DishType": t['DishType'],
+                "ID": meta_results[idx]['ID'],
             })
         return JSONResponse(content={"recipes": recipes})
     except Exception as e:
