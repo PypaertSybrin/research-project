@@ -1,10 +1,11 @@
 import json
 import os
 import chromadb
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import dotenv
 from pydantic import BaseModel
+import requests
 
 # Initialize FastAPI
 app = FastAPI()
@@ -30,6 +31,30 @@ def health_check():
     Health check endpoint.
     """
     return {"status": "ok"}
+
+@app.post('/speech-to-text')
+async def speech_to_text(req: Request):
+    """
+    Convert speech to text and fetch recipes.
+    """
+    data = req.model_dump()
+    audioUrl = data['audioUrl']
+    audioConfig = data['audioConfig']
+
+    if audioUrl is None:
+        print("audioUrl is required")
+    if audioConfig is None:
+        print("audioConfig is required")
+    
+    try:
+        # Perform speech to text conversion
+        response = await requests.post('https://speech.googleapis.com/v1/speech:recognize', data=JSONResponse(content={"audioUrl": audioUrl, "audioConfig": audioConfig}), headers={'Accept': 'application/json', 'Content-Type': 'application/json', 'X-google-api-key': os.getenv("GOOGLE_API_KEY")}, timeout=10)
+        return response
+    except Exception as e:
+        print(f"Error in speech to text conversion: {str(e)}")
+        return str(e)
+
+   
 
 @app.post("/query_recipes")
 def query_recipes(query_request: QueryRequest):
