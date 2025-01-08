@@ -36,7 +36,8 @@ for idx, row in rows_to_store.iterrows():
     recipe_json = {
         "Title": recipe_title,
         "Ingredients": row['Ingredients'],
-        "Instructions": row['Instructions']
+        "Instructions": row['Instructions'],
+        "ImageUrl": row['Image_Name']
     }
 
     # Add the recipe data to the respective lists
