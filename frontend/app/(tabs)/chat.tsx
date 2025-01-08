@@ -9,22 +9,24 @@ export default function ChatScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+  
   const handleSubmit = async () => {
     if (!inputText) return; // Prevent empty submissions
     setLoading(true);
     setError(''); // Clear previous response
     setResposeRecipes([]); // Clear previous response
+    
+    console.log(backendUrl);
 
     try {
-      console.log('aaaaaaaaaaaaaa');
-      const response = await fetch('http://192.168.0.201:8000/query_recipes', {
+      const response = await fetch(`${backendUrl}:8000/query_recipes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ message: inputText }),
       });
-      console.log('bbbbbbbbbbbbbbb');
 
       if (!response.ok) {
         throw new Error('Failed to fetch response from the server.');
@@ -35,8 +37,6 @@ export default function ChatScreen() {
         console.log(recipe);
         setResposeRecipes((prev) => [...prev, recipe]);
       }
-      console.log('ddddddddddddddddddddddddddd');
-      console.log(responseRecipes);
     } catch (error: any) {
       setError('Error: ' + error.message);
     } finally {
@@ -58,7 +58,7 @@ export default function ChatScreen() {
             <ThemedView key={recipe.Title}>
               <Text style={styles.response}>{recipe.Title}</Text>
               <Image
-                source={{ uri: 'http://192.168.0.201:8080/' + recipe.ImageUrl + '.jpg' }} // Make sure this path is correct
+                source={{ uri: `${backendUrl}:8080/` + recipe.ImageUrl + '.jpg' }} // Make sure this path is correct
                 style={styles.image}
               />
             </ThemedView>
