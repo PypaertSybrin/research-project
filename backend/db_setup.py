@@ -22,14 +22,11 @@ if not recipes:
     raise ValueError(f"No recipes found in the JSON file '{json_file}'.")
 
 rows_to_store = recipes[:50]
-print(f"Storing {len(rows_to_store)} recipes from the JSON file '{json_file}'.")
 
 # Lists to store all documents, metadatas, and ids
 documents = []
 metadatas = []
 ids = []
-
-print(rows_to_store)
 
 # Iterate over the rows and prepare data
 for row in rows_to_store:

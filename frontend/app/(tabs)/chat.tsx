@@ -5,23 +5,17 @@ import { ThemedView } from '@/components/ThemedView';
 
 export class Recipe {
   ID: string;
-  Title: string;
+  Name: string;
   ImageUrl: string;
-  Ingredients: string[];
-  Instructions: string[];
 
   constructor(
     ID: string,
-    Title: string,
+    Name: string,
     ImageUrl: string,
-    Ingredients: string[],
-    Instructions: string[]
   ) {
     this.ID = ID;
-    this.Title = Title;
+    this.Name = Name;
     this.ImageUrl = ImageUrl;
-    this.Ingredients = Ingredients;
-    this.Instructions = Instructions;
   }
 }
 
@@ -79,9 +73,9 @@ export default function ChatScreen() {
           <Text style={styles.response}>{error}</Text>
           {responseRecipes.map((recipe) => (
             <ThemedView key={recipe.ID}>
-              <Text style={styles.response}>{recipe.Title}</Text>
+              <Text style={styles.response}>{recipe.Name}</Text>
               <Image
-                source={{ uri: `${backendUrl}:8080/` + recipe.ImageUrl + '.jpg' }} // Make sure this path is correct
+                source={{ uri: recipe.ImageUrl }}
                 style={styles.image}
               />
             </ThemedView>

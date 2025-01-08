@@ -38,7 +38,7 @@ def query_recipes(query_request: QueryRequest):
     """
     try:
         query = query_request.message
-        results = collection.query(query_texts=query, n_results=1)
+        results = collection.query(query_texts=query, n_results=2)
         doc_results = results['documents'][0]
         meta_results = results['metadatas'][0]
         score_results = results['distances'][0]
@@ -52,6 +52,7 @@ def query_recipes(query_request: QueryRequest):
                 "Score": score_results[idx],
                 "DishType": t['DishType'],
                 "ID": meta_results[idx]['ID'],
+                "ImageUrl": meta_results[idx]['ImageUrl'],
             })
         return JSONResponse(content={"recipes": recipes})
     except Exception as e:
