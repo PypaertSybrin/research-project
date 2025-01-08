@@ -1,21 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  SafeAreaView,
-  ScrollView,
-  View,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
-import { Audio } from "expo-av";
-import { transcribeSpeech } from "@/functions/transcribeSpeech";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { recordSpeech } from "@/functions/recordSpeech";
-import useWebFocus from "@/hooks/useWebFocus";
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, SafeAreaView, ScrollView, View, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Audio } from 'expo-av';
+import { transcribeSpeech } from '@/functions/transcribeSpeech';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { recordSpeech } from '@/functions/recordSpeech';
+import useWebFocus from '@/hooks/useWebFocus';
 
 export default function HomeScreen() {
-  const [transcribedSpeech, setTranscribedSpeech] = useState("");
+  const [transcribedSpeech, setTranscribedSpeech] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const isWebFocused = useWebFocus();
@@ -33,9 +25,7 @@ export default function HomeScreen() {
       if (!webAudioPermissionsRef.current) getMicAccess();
     } else {
       if (webAudioPermissionsRef.current) {
-        webAudioPermissionsRef.current
-          .getTracks()
-          .forEach((track) => track.stop());
+        webAudioPermissionsRef.current.getTracks().forEach((track) => track.stop());
         webAudioPermissionsRef.current = null;
       }
     }
@@ -43,11 +33,7 @@ export default function HomeScreen() {
 
   const startRecording = async () => {
     setIsRecording(true);
-    await recordSpeech(
-      audioRecordingRef,
-      setIsRecording,
-      !!webAudioPermissionsRef.current
-    );
+    await recordSpeech(audioRecordingRef, setIsRecording, !!webAudioPermissionsRef.current);
   };
 
   const stopRecording = async () => {
@@ -55,7 +41,7 @@ export default function HomeScreen() {
     setIsTranscribing(true);
     try {
       const speechTranscript = await transcribeSpeech(audioRecordingRef);
-      setTranscribedSpeech(speechTranscript || "");
+      setTranscribedSpeech(speechTranscript || '');
     } catch (e) {
       console.error(e);
     } finally {
@@ -75,11 +61,10 @@ export default function HomeScreen() {
               <Text
                 style={{
                   ...styles.transcribedText,
-                  color: transcribedSpeech ? "#000" : "rgb(150,150,150)",
+                  color: transcribedSpeech ? '#000' : 'rgb(150,150,150)',
                 }}
               >
-                {transcribedSpeech ||
-                  "Your transcribed text will be shown here"}
+                {transcribedSpeech || 'Your transcribed text will be shown here'}
               </Text>
             )}
           </View>
@@ -92,11 +77,7 @@ export default function HomeScreen() {
             onPressOut={stopRecording}
             disabled={isRecording || isTranscribing}
           >
-            {isRecording ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <FontAwesome name="microphone" size={40} color="white" />
-            )}
+            {isRecording ? <ActivityIndicator size="small" color="white" /> : <FontAwesome name="microphone" size={40} color="white" />}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -107,48 +88,48 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   mainScrollContainer: {
     padding: 20,
-    height: "100%",
-    width: "100%",
+    height: '100%',
+    width: '100%',
   },
   mainInnerContainer: {
     gap: 75,
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     flexGrow: 1,
   },
   title: {
     fontSize: 35,
     padding: 5,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center',
     marginBottom: 20,
   },
   transcriptionContainer: {
-    backgroundColor: "rgb(220,220,220)",
-    width: "100%",
+    backgroundColor: 'rgb(220,220,220)',
+    width: '100%',
     height: 300,
     padding: 20,
     marginBottom: 20,
     borderRadius: 5,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
   transcribedText: {
     fontSize: 20,
     padding: 5,
-    color: "#000",
-    textAlign: "left",
-    width: "100%",
+    color: '#000',
+    textAlign: 'left',
+    width: '100%',
   },
   microphoneButton: {
-    backgroundColor: "red",
+    backgroundColor: 'red',
     width: 75,
     height: 75,
     marginTop: 100,
     borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
