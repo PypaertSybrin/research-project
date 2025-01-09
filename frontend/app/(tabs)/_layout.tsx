@@ -41,13 +41,20 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
-        <Tabs.Screen
-          name="chat"
-          options={{
-            title: 'Chat',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="chat.fill" color={color} />,
-          }}
-        />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Chat',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="chat.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="speech"
+        options={{
+          title: 'Speech',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="mic.fill" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
