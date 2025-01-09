@@ -3,9 +3,26 @@ import { StyleSheet, TextInput, Button, Text, ActivityIndicator, Image, ScrollVi
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
+export class Recipe {
+  ID: string;
+  Name: string;
+  ImageUrl: string;
+
+  constructor(
+    ID: string,
+    Name: string,
+    ImageUrl: string,
+  ) {
+    this.ID = ID;
+    this.Name = Name;
+    this.ImageUrl = ImageUrl;
+  }
+}
+
+
 export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
-  const [responseRecipes, setResposeRecipes] = useState([{ Title: '', ImageUrl: '' }]);
+  const [responseRecipes, setResposeRecipes] = useState([] as Recipe[]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -55,10 +72,10 @@ export default function ChatScreen() {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Text style={styles.response}>{error}</Text>
           {responseRecipes.map((recipe) => (
-            <ThemedView key={recipe.Title}>
-              <Text style={styles.response}>{recipe.Title}</Text>
+            <ThemedView key={recipe.ID}>
+              <Text style={styles.response}>{recipe.Name}</Text>
               <Image
-                source={{ uri: `${backendUrl}:8080/` + recipe.ImageUrl + '.jpg' }} // Make sure this path is correct
+                source={{ uri: recipe.ImageUrl }}
                 style={styles.image}
               />
             </ThemedView>
