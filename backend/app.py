@@ -49,28 +49,28 @@ async def get_recipes(req: Request):
         print(f"Performing speech to text conversion for audio URL: {audioUrl}")
         print(f"Audio Config: {audioConfig}")
 
-        response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
-            "config": {
-                "encoding": audioConfig["encoding"],
-                "sampleRateHertz": audioConfig["sampleRateHertz"],
-                "languageCode": audioConfig["languageCode"]
-            },
-            "audio": {
-                "content": audioUrl
-            }
-        }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
+        # response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
+        #     "config": {
+        #         "encoding": audioConfig["encoding"],
+        #         "sampleRateHertz": audioConfig["sampleRateHertz"],
+        #         "languageCode": audioConfig["languageCode"]
+        #     },
+        #     "audio": {
+        #         "content": audioUrl
+        #     }
+        # }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
 
-        if response.status_code != 200:
-            print(f"Error in speech to text conversion: {response.json()}")
-            return JSONResponse(content={"error": response.json()}, status_code=500)
+        # if response.status_code != 200:
+        #     print(f"Error in speech to text conversion: {response.json()}")
+        #     return JSONResponse(content={"error": response.json()}, status_code=500)
         
-        transcript_result = response.json()
-        print(f"Transcript: {transcript_result}")
-        converted_text = transcript_result['results'][0]['alternatives'][0]['transcript']
-        print(f"Converted Text: {converted_text}")
+        # transcript_result = response.json()
+        # print(f"Transcript: {transcript_result}")
+        # converted_text = transcript_result['results'][0]['alternatives'][0]['transcript']
+        # print(f"Converted Text: {converted_text}")
 
         # Query recipes based on the converted text
-        return query_recipes(converted_text)
+        return query_recipes('I want chicken')
     
     except json.JSONDecodeError:
         print("Invalid JSON in the request body")
@@ -97,7 +97,7 @@ def query_recipes(query: str):
                 "Ingredients": t['Ingredients'],
                 "Score": score_results[idx],
                 "DishType": t['DishType'],
-                "ID": meta_results[idx]['ID'],
+                "Id": meta_results[idx]['Id'],
                 "ImageUrl": meta_results[idx]['ImageUrl'],
             })
         return JSONResponse(content={"recipes": recipes})
