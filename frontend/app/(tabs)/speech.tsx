@@ -5,14 +5,28 @@ import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { recordSpeech } from '@/functions/recordSpeech';
 import useWebFocus from '@/hooks/useWebFocus';
+import { ThemedView } from '@/components/ThemedView';
+import { Image } from 'expo-image';
+
+export class Recipe {
+  ID: string;
+  Name: string;
+  ImageUrl: string;
+
+  constructor(ID: string, Name: string, ImageUrl: string) {
+    this.ID = ID;
+    this.Name = Name;
+    this.ImageUrl = ImageUrl;
+  }
+}
 
 export default function HomeScreen() {
-  const [transcribedSpeech, setTranscribedSpeech] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const isWebFocused = useWebFocus();
   const audioRecordingRef = useRef(new Audio.Recording());
   const webAudioPermissionsRef = useRef<MediaStream | null>(null);
+  const [responseRecipes, setResposeRecipes] = useState([] as Recipe[]);
 
   useEffect(() => {
     if (isWebFocused) {
@@ -40,8 +54,11 @@ export default function HomeScreen() {
     setIsRecording(false);
     setIsTranscribing(true);
     try {
-      const speechTranscript = await transcribeSpeech(audioRecordingRef);
-      setTranscribedSpeech(speechTranscript || '');
+      const data = await transcribeSpeech(audioRecordingRef);
+      for (const recipe of data.recipes) {
+        console.log(recipe);
+        setResposeRecipes((prev) => [...prev, recipe]);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -54,20 +71,12 @@ export default function HomeScreen() {
       <ScrollView style={styles.mainScrollContainer}>
         <View style={styles.mainInnerContainer}>
           <Text style={styles.title}>Welcome to the Speech-to-Text App</Text>
-          <View style={styles.transcriptionContainer}>
-            {isTranscribing ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <Text
-                style={{
-                  ...styles.transcribedText,
-                  color: transcribedSpeech ? '#000' : 'rgb(150,150,150)',
-                }}
-              >
-                {transcribedSpeech || 'Your transcribed text will be shown here'}
-              </Text>
-            )}
-          </View>
+          {responseRecipes.map((recipe) => (
+            <ThemedView key={recipe.ID}>
+              <Text style={styles.response}>{recipe.Name}</Text>
+              <Image source={{ uri: recipe.ImageUrl }} style={styles.image} />
+            </ThemedView>
+          ))}
           <TouchableOpacity
             style={{
               ...styles.microphoneButton,
@@ -131,5 +140,16 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  response: {
+    marginTop: 20,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  image: {
+    width: 200,
+    height: 200,
+    marginTop: 10,
+    alignSelf: 'center',
   },
 });

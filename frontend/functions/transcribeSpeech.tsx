@@ -2,7 +2,6 @@ import { Audio } from 'expo-av';
 import { MutableRefObject } from 'react';
 import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
-import * as Device from 'expo-device';
 
 export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio.Recording>) => {
   try {
@@ -28,42 +27,26 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
       const audioConfig = {
         encoding: Platform.OS === 'android' ? 'AMR_WB' : 'LINEAR16',
         sampleRateHertz: Platform.OS === 'android' ? 16000 : 41000,
-        languageCode: 'en-US',
+        languageCode: 'en-GB',
       };
 
       if (recordingUri && dataUrl) {
-        const rootOrigin = Platform.OS === 'android' ? '10.0.2.2' : Device.isDevice ? process.env.LOCAL_DEV_IP || 'localhost' : 'localhost';
+        // const rootOrigin = Platform.OS === 'android' ? '10.0.2.2' : Device.isDevice ? process.env.LOCAL_DEV_IP || 'localhost' : 'localhost';
         // const serverUrl = `http://${rootOrigin}:8000`;
-        // const serverResponse = await fetch(`${serverUrl}/speech-to-text`, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({ audioUrl: dataUrl, config: audioConfig }),
-        // })
-        //   .then((res) => res.json())
-        //   .catch((e: Error) => console.error(e));
-        const serverResponse = {
-          results: [
-            {
-              alternatives: [
-                {
-                  transcript: 'Hello, world!',
-                },
-              ],
-            },
-          ],
-        };
+        const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+        // if android, this url, else, other url
+        const response = await fetch(`${backendUrl}:8000/get-recipes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ audioUrl: dataUrl, audioConfig: audioConfig }),
+        });
 
-        const results = serverResponse?.results;
-        if (results) {
-          const transcript = results?.[0].alternatives?.[0].transcript;
-          if (!transcript) return undefined;
-          return transcript;
-        } else {
-          console.error('No transcript found');
-          return undefined;
+        if (!response.ok) {
+          throw new Error('Failed to fetch response from the server.');
         }
+        return await response.json();
       }
     } else {
       console.error('Recording must be prepared prior to unloading');
