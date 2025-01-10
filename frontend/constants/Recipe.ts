@@ -7,8 +7,9 @@ export class Recipe {
     Time: string;
     Ingredients: [];
     Description: string;
+    Instructions: [];
   
-    constructor(Id: string, Name: string, ImageUrl: string, Author: string, Difficulty: string, Time: string, Ingredients: [], Desciption: string) {
+    constructor(Id: string, Name: string, ImageUrl: string, Author: string, Difficulty: string, Time: string, Ingredients: [], Desciption: string, instructions: []) {
       this.Id = Id;
       this.Name = Name;
       this.ImageUrl = ImageUrl;
@@ -17,5 +18,6 @@ export class Recipe {
       this.Time = Time;
       this.Ingredients = Ingredients;
       this.Description = Desciption;
+      this.Instructions = instructions;
     }
   }

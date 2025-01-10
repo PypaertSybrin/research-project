@@ -6,12 +6,11 @@ import { ThemedText } from './ThemedText';
 import { Colors } from '@/constants/Colors';
 import { IconSymbol } from './ui/IconSymbol';
 import { useState } from 'react';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 
 export function RecipeLarge({ recipe }: { recipe: Recipe }) {
   const colorScheme = useColorScheme();
   const [imageError, setImageError] = useState(false);
-  const router = useRouter();
 
   function convertMinToReadableFormat(min: number) {
     let hours = Math.floor(min / 60);

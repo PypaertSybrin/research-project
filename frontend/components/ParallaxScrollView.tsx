@@ -1,13 +1,14 @@
 import type { PropsWithChildren, ReactElement } from 'react';
 import { Pressable, StyleSheet, useColorScheme } from 'react-native';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { IconSymbol } from './ui/IconSymbol';
 import { useRouter } from 'expo-router';
 
-const HEADER_HEIGHT = 300;
+const HEADER_HEIGHT = 350;
 
 type Props = PropsWithChildren<{
   headerImage: ReactElement;
@@ -36,14 +37,26 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
   function handleBackButton() {
     router.back();
   }
+
   return (
     <ThemedView style={styles.container}>
       <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16} scrollIndicatorInsets={{ bottom }} contentContainerStyle={{ paddingBottom: bottom }}>
-        <Animated.View style={[styles.header, { backgroundColor: headerBackgroundColor[colorScheme] }, headerAnimatedStyle]}>{headerImage}</Animated.View>
-        <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 32 }}>
+        <Animated.View style={[styles.header, { backgroundColor: headerBackgroundColor[colorScheme] }, headerAnimatedStyle]}>
+          {/* Wrap the image and the gradient inside a container */}
+          <ThemedView style={styles.imageContainer}>
+            {headerImage}
+            {/* Apply the gradient over the image with a transition halfway down */}
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.1)']} // Transition from white to transparent
+              locations={[0, 0.6, 1]} // Define where the gradient changes
+              style={styles.gradient}
+            />
+          </ThemedView>
+        </Animated.View>
+        <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 24 }}>
           <IconSymbol name="back" size={32} color={'#000'} />
         </Pressable>
-        <Pressable onPress={() => console.log('back')} style={{ ...styles.icons, right: 32 }}>
+        <Pressable onPress={() => console.log('back')} style={{ ...styles.icons, right: 24 }}>
           <IconSymbol name="like" size={32} color={'#000'} />
         </Pressable>
         <ThemedView style={styles.content}>{children}</ThemedView>
@@ -58,13 +71,21 @@ const styles = StyleSheet.create({
   },
   header: {
     height: HEADER_HEIGHT,
-    overflow: 'hidden',
+    position: 'relative', // Ensure the header content (image, gradient) is positioned within this area
+    overflow: 'hidden', // Clip any content that overflows the header
   },
-  content: {
-    flex: 1,
-    padding: 32,
-    gap: 16,
-    overflow: 'hidden',
+  imageContainer: {
+    position: 'relative', // Allows the gradient to be positioned over the image
+    width: '100%',
+    height: '100%',
+  },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12, // Make sure the gradient fits the rounded corners if necessary
   },
   icons: {
     position: 'absolute',
@@ -73,5 +94,24 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 12,
     backgroundColor: 'white',
+    opacity: 0.9,
+    shadowOffset: { width: 0, height: 0 },
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  content: {
+    height: '100%',
+    padding: 24,
+    gap: 8,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -50, // Overlapping the header
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
 });
+

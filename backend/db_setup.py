@@ -50,7 +50,7 @@ for row in rows_to_store:
         "Name": row['name'],
         "Description": row['description'],
         "Ingredients": row['ingredients'],
-        "Steps": row['steps'],
+        "Instructions": row['steps'],
         "DishType": row['dish_type'],
         "SubCategory": row['subcategory'],
     }

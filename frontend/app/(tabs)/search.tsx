@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 48,
     paddingBottom: 16,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
   },
   mainContainer: {
     flex: 1,

@@ -70,7 +70,7 @@ async def get_recipes(req: Request):
         # print(f"Converted Text: {converted_text}")
 
         # Query recipes based on the converted text
-        return query_recipes('Get me some recipes for pasta')
+        return query_recipes('I want chicken curry')
         # TODO return better responses
     
     except json.JSONDecodeError:
@@ -97,6 +97,7 @@ def query_recipes(query: str):
                 "Name": t['Name'],
                 "Description": t['Description'],
                 "Ingredients": t['Ingredients'],
+                "Instructions": t['Instructions'],
                 "DishType": t['DishType'],
                 "ImageUrl": meta_results[idx]['ImageUrl'],
                 "Author": meta_results[idx]['Author'],
