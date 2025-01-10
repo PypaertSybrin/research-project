@@ -1,5 +1,4 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
 import { Platform, useColorScheme } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
@@ -28,28 +27,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.nav" color={color} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="search.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="search.nav" color={color} />,
         }}
       />
       <Tabs.Screen
         name="shoppinglist"
         options={{
           title: 'ShoppingList',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list-alt.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list-alt.nav" color={color} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: 'Account',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.nav" color={color} />,
         }}
       />
     </Tabs>

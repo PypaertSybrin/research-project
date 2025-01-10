@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, ScrollView, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, useColorScheme, Animated } from 'react-native';
 import { Audio } from 'expo-av';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { recordSpeech } from '@/functions/recordSpeech';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,28 +9,27 @@ import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
 import { RecipeLarge } from '@/components/RecipeLarge';
 import { Recipe } from '@/constants/Recipe';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function HomeScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const audioRecordingRef = useRef(new Audio.Recording());
-  const [responseRecipes, setResposeRecipes] = useState([] as Recipe[]);
+  const [responseRecipes, setResponseRecipes] = useState<Recipe[]>([]);
   const [permission, setPermission] = useState({ status: 'undetermined' });
+  const [animations, setAnimations] = useState<Animated.Value[]>([]);
   const colorScheme = useColorScheme();
 
   useEffect(() => {
     const requestOrGetPermissions = async () => {
-      {
-        setPermission(await Audio.getPermissionsAsync());
-        if (permission.status === 'undetermined') {
-          setPermission(await Audio.requestPermissionsAsync());
-        }
+      setPermission(await Audio.getPermissionsAsync());
+      if (permission.status === 'undetermined') {
+        setPermission(await Audio.requestPermissionsAsync());
       }
     };
     requestOrGetPermissions();
   }, []);
 
   const startRecording = async () => {
-    // get permission
     if (permission.status === 'granted') {
       console.log('Permission granted');
       setIsRecording(true);
@@ -41,13 +39,25 @@ export default function HomeScreen() {
 
   const stopRecording = async () => {
     if (!isRecording) return;
-    setResposeRecipes([]);
+    setResponseRecipes([]);
     try {
       const data = await transcribeSpeech(audioRecordingRef);
-      for (const recipe of data.recipes) {
-        console.log(recipe);
-        setResposeRecipes((prev) => [...prev, recipe]);
-      }
+      const newRecipes = data.recipes;
+      setResponseRecipes(newRecipes);
+
+      // Create animation values for each recipe
+      const newAnimations = newRecipes.map(() => new Animated.Value(0));
+      setAnimations(newAnimations);
+
+      // Start the fall-down animation
+      newAnimations.forEach((anim: any, index: any) => {
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 300,
+          delay: index * 100, // Add a delay for each recipe
+          useNativeDriver: true,
+        }).start();
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -61,13 +71,30 @@ export default function HomeScreen() {
         <ThemedText type="title" style={{ marginBottom: 8 }}>
           Recipes
         </ThemedText>
-        <ThemedText type="subtitle" style={{ marginBottom: 32 }}>
+        <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
           Let AI help you find the best recipes for you!
         </ThemedText>
         {responseRecipes.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
-            {responseRecipes.map((recipe) => (
-              <RecipeLarge key={recipe.Id} recipe={recipe} />
+            {responseRecipes.map((recipe, index) => (
+              <Animated.View
+                key={recipe.Id}
+                style={{
+                  opacity: animations[index] || 0,
+                  transform: [
+                    {
+                      translateY: animations[index]
+                        ? animations[index].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-20, 0], // Start 50px above and move down
+                          })
+                        : -20,
+                    },
+                  ],
+                }}
+              >
+                <RecipeLarge recipe={recipe} />
+              </Animated.View>
             ))}
           </ScrollView>
         ) : null}
@@ -88,7 +115,7 @@ export default function HomeScreen() {
           onPressOut={stopRecording}
           disabled={isRecording || permission.status !== 'granted'}
         >
-          {isRecording ? <ActivityIndicator size="large" color="white" /> : <FontAwesome name="microphone" size={40} color="white" />}
+          {isRecording ? <ActivityIndicator size="large" color="white" /> : <IconSymbol name="mic" size={32} color="white" />}
         </TouchableOpacity>
         <ThemedText type="subtitle" style={{ textAlign: 'center', marginTop: 4 }}>
           Press and hold to record
@@ -102,7 +129,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 48,
-    paddingBottom: 32,
+    paddingBottom: 16,
     paddingHorizontal: 8,
   },
   mainContainer: {
@@ -118,18 +145,12 @@ const styles = StyleSheet.create({
     height: 300,
   },
   microphoneButton: {
-    width: 100,
-    height: 100,
+    width: 75,
+    height: 75,
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: 32,
-  },
-  image: {
-    width: 200,
-    height: 200,
-    marginTop: 10,
-    alignSelf: 'center',
+    marginTop: 16,
   },
 });

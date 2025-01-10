@@ -70,7 +70,8 @@ async def get_recipes(req: Request):
         # print(f"Converted Text: {converted_text}")
 
         # Query recipes based on the converted text
-        return query_recipes('I want chicken')
+        return query_recipes('Get me some recipes for pasta')
+        # TODO return better responses
     
     except json.JSONDecodeError:
         print("Invalid JSON in the request body")
@@ -84,7 +85,7 @@ async def get_recipes(req: Request):
 def query_recipes(query: str):
     try:
         print(query)
-        results = collection.query(query_texts=query, n_results=2)
+        results = collection.query(query_texts=query, n_results=10)
         doc_results = results['documents'][0]
         meta_results = results['metadatas'][0]
         score_results = results['distances'][0]
@@ -92,13 +93,16 @@ def query_recipes(query: str):
         for idx, i in enumerate(doc_results):
             t = json.loads(i)
             recipes.append({
+                "Id": meta_results[idx]['Id'],
                 "Name": t['Name'],
                 "Description": t['Description'],
                 "Ingredients": t['Ingredients'],
-                "Score": score_results[idx],
                 "DishType": t['DishType'],
-                "Id": meta_results[idx]['Id'],
                 "ImageUrl": meta_results[idx]['ImageUrl'],
+                "Author": meta_results[idx]['Author'],
+                "Difficulty": meta_results[idx]['Difficulty'],
+                "Time": meta_results[idx]['Time'],
+                "Score": score_results[idx],
             })
         return JSONResponse(content={"recipes": recipes})
     except Exception as e:
