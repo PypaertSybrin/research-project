@@ -36,7 +36,6 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
   function handleBackButton() {
     router.back();
   }
-
   return (
     <ThemedView style={styles.container}>
       <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16} scrollIndicatorInsets={{ bottom }} contentContainerStyle={{ paddingBottom: bottom }}>
