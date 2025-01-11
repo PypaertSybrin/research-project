@@ -5,8 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
-import { IconSymbol } from './ui/IconSymbol';
+// import { IconSymbol } from './ui/IconSymbol';
 import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const HEADER_HEIGHT = 350;
 
@@ -54,10 +55,10 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
           </ThemedView>
         </Animated.View>
         <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 24 }}>
-          <IconSymbol name="back" size={32} color={'#000'} />
+          <MaterialIcons name="arrow-back" size={32} color={'#000'} />
         </Pressable>
         <Pressable onPress={() => console.log('back')} style={{ ...styles.icons, right: 24 }}>
-          <IconSymbol name="like" size={32} color={'#000'} />
+          <MaterialIcons name="favorite-border" size={32} color={'#000'} />
         </Pressable>
         <ThemedView style={styles.content}>{children}</ThemedView>
       </Animated.ScrollView>

@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, useColorScheme, Animated } from 'react-native';
+import {
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  useColorScheme,
+  Animated,
+  VirtualizedList,
+} from 'react-native';
 import { Audio } from 'expo-av';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import { recordSpeech } from '@/functions/recordSpeech';
@@ -9,7 +16,7 @@ import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
 import { RecipeLarge } from '@/components/RecipeLarge';
 import { Recipe } from '@/constants/Recipe';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const [isRecording, setIsRecording] = useState(false);
@@ -31,7 +38,6 @@ export default function HomeScreen() {
 
   const startRecording = async () => {
     if (permission.status === 'granted') {
-      console.log('Permission granted');
       setIsRecording(true);
       await recordSpeech(audioRecordingRef, setIsRecording);
     }
@@ -45,16 +51,14 @@ export default function HomeScreen() {
       const newRecipes = data.recipes;
       setResponseRecipes(newRecipes);
 
-      // Create animation values for each recipe
       const newAnimations = newRecipes.map(() => new Animated.Value(0));
       setAnimations(newAnimations);
 
-      // Start the fall-down animation
       newAnimations.forEach((anim: any, index: any) => {
         Animated.timing(anim, {
           toValue: 1,
           duration: 300,
-          delay: index * 100, // Add a delay for each recipe
+          delay: index * 100,
           useNativeDriver: true,
         }).start();
       });
@@ -64,6 +68,9 @@ export default function HomeScreen() {
       setIsRecording(false);
     }
   };
+
+  const getItem = (data: any, index: any) => data[index];
+  const getItemCount = (data: any) => data.length;
 
   return (
     <ThemedView style={styles.container}>
@@ -75,10 +82,13 @@ export default function HomeScreen() {
           Let AI help you find the best recipes for you!
         </ThemedText>
         {responseRecipes.length > 0 ? (
-          <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
-            {responseRecipes.map((recipe, index) => (
+          <VirtualizedList
+            data={responseRecipes}
+            keyExtractor={(item) => item.Id.toString()}
+            getItem={getItem}
+            getItemCount={getItemCount}
+            renderItem={({ item, index }) => (
               <Animated.View
-                key={recipe.Id}
                 style={{
                   opacity: animations[index] || 0,
                   transform: [
@@ -86,23 +96,23 @@ export default function HomeScreen() {
                       translateY: animations[index]
                         ? animations[index].interpolate({
                             inputRange: [0, 1],
-                            outputRange: [-20, 0], // Start 50px above and move down
+                            outputRange: [-20, 0],
                           })
                         : -20,
                     },
                   ],
                 }}
               >
-                <RecipeLarge recipe={recipe} />
+                <RecipeLarge recipe={item} />
               </Animated.View>
-            ))}
-          </ScrollView>
-        ) : null}
-        {responseRecipes.length === 0 ? (
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
           <ThemedView style={styles.backgroundImageContainer}>
             <Image source={require('@/assets/images/recipe.svg')} style={styles.backgroundImage} />
           </ThemedView>
-        ) : null}
+        )}
       </ThemedView>
       <ThemedView style={{ backgroundColor: Colors[colorScheme ?? 'light'].background }}>
         <TouchableOpacity
@@ -115,7 +125,11 @@ export default function HomeScreen() {
           onPressOut={stopRecording}
           disabled={isRecording || permission.status !== 'granted'}
         >
-          {isRecording ? <ActivityIndicator size="large" color="white" /> : <IconSymbol name="mic" size={32} color="white" />}
+          {isRecording ? (
+            <ActivityIndicator size="large" color="white" />
+          ) : (
+            <MaterialIcons name="mic" size={32} color="white" />
+          )}
         </TouchableOpacity>
         <ThemedText type="subtitle" style={{ textAlign: 'center', marginTop: 4 }}>
           Press and hold to record

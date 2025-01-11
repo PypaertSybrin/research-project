@@ -6,6 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Image, Pressable, StyleSheet, View, Animated, Easing, useColorScheme } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Colors } from '@/constants/Colors';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 export default function RecipeDetailScreen() {
   const recipeParams = useLocalSearchParams();
@@ -44,6 +45,16 @@ export default function RecipeDetailScreen() {
         <ThemedText style={styles.recipeName}>{recipe.Name}</ThemedText>
         {renderDescription()}
       </ThemedView>
+      <ThemedView style={{ flexDirection: 'column', justifyContent: 'space-between', marginBottom: 8 }}>
+        <ThemedView style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <RecipeInfo icon="chef-hat" community={true} info={recipe.Author} />
+          <RecipeInfo icon="restaurant" community={false}  info={recipe.Difficulty} />
+        </ThemedView>
+        <ThemedView style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <RecipeInfo icon="timer" community={false} info={recipe.Time} />
+          <RecipeInfo icon="restaurant-menu" community={false} info={recipe.Time} />
+        </ThemedView>
+      </ThemedView>
 
       {/* Toggle Switch */}
       <ThemedView style={styles.toggleContainer}>
@@ -77,21 +88,40 @@ export default function RecipeDetailScreen() {
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Ingredients</ThemedText>
             <ThemedText style={{ color: '#ccc' }}>{recipe.Ingredients.length} items</ThemedText>
             {recipe.Ingredients.map((ingredient, index) => (
-              <ThemedText style={{borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8}} key={index}>{ingredient}</ThemedText>
+              <ThemedText style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8 }} key={index}>
+                {ingredient}
+              </ThemedText>
             ))}
           </ThemedView>
         )}
         {/* {activeTab === 'Ingredients' && recipe.Ingredients.map((ingredient, index) => <ThemedText key={index}>{ingredient}</ThemedText>)} */}
         {activeTab === 'Instructions' && (
-            <ThemedView>
-                <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
-                {recipe.Instructions.map((instruction, index) => (
-                <ThemedText style={{borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8}} key={index}>{instruction}</ThemedText>
-                ))}
-            </ThemedView>
-            )}
+          <ThemedView>
+            <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
+            {recipe.Instructions.map((instruction, index) => (
+              <ThemedText style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8 }} key={index}>
+                {instruction}
+              </ThemedText>
+            ))}
+          </ThemedView>
+        )}
       </ThemedView>
     </ParallaxScrollView>
+  );
+}
+
+export function RecipeInfo({ icon, community, info }: { icon: string; community: boolean; info: string }) {
+  const colorScheme = useColorScheme();
+  return (
+    <ThemedView style={{ flexDirection: 'row', alignItems: 'center' }}>
+      {/* if community, show community icon  */}
+      {community ? (
+        <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />
+      ) : (
+        <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />
+      )}
+      <ThemedText>{info}</ThemedText>
+    </ThemedView>
   );
 }
 
@@ -106,6 +136,11 @@ const styles = StyleSheet.create({
   recipeName: {
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  icons: {
+    backgroundColor: '#ccc',
+    padding: 8,
+    borderRadius: 8,
   },
   toggleContainer: {
     flexDirection: 'row',

@@ -2,8 +2,9 @@ import { Tabs } from 'expo-router';
 import { Platform, useColorScheme } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+// import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -27,28 +28,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.nav" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="search.nav" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="search" color={color} />,
         }}
       />
       <Tabs.Screen
         name="shoppinglist"
         options={{
           title: 'ShoppingList',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list-alt.nav" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="format-list-bulleted" color={color} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: 'Account',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.nav" color={color} />,
+          tabBarIcon: ({ color }) => <MaterialIcons size={28} name="person" color={color} />, 
         }}
       />
     </Tabs>

@@ -1,10 +1,10 @@
 import { Recipe } from '@/constants/Recipe';
 import { ThemedView } from './ThemedView';
 import { Image } from 'expo-image';
-import { StyleSheet, useColorScheme, View, TouchableOpacity, Pressable } from 'react-native';
+import { StyleSheet, useColorScheme, View, Pressable } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { Colors } from '@/constants/Colors';
-import { IconSymbol } from './ui/IconSymbol';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Link } from 'expo-router';
 
@@ -38,7 +38,7 @@ export function RecipeLarge({ recipe }: { recipe: Recipe }) {
                 <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
               )}
               <View style={styles.imageOverlay}>
-                <IconSymbol name="like" size={24} color={'#000'} />
+                <MaterialIcons name="favorite-border" size={24} color={Colors[colorScheme ?? 'light'].secondary} />
               </View>
             </View>
             <View style={styles.recipeContainer}>
@@ -56,7 +56,7 @@ export function RecipeLarge({ recipe }: { recipe: Recipe }) {
                   {recipe.Difficulty}
                 </ThemedText>
                 <View style={styles.timerContainer}>
-                  <IconSymbol name="timer" size={16} color={'#aaa'} />
+                  <MaterialIcons name="timer" size={16} color={Colors[colorScheme ?? 'light'].primary} />
                   <ThemedText style={styles.timerText} numberOfLines={1}>
                     {convertMinToReadableFormat(parseInt(recipe.Time))}
                   </ThemedText>
