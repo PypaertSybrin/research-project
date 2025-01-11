@@ -103,6 +103,7 @@ def query_recipes(query: str):
                 "Author": meta_results[idx]['Author'],
                 "Difficulty": meta_results[idx]['Difficulty'],
                 "Time": meta_results[idx]['Time'],
+                "Servings": meta_results[idx]['Servings'],
                 "Score": score_results[idx],
             })
         return JSONResponse(content={"recipes": recipes})

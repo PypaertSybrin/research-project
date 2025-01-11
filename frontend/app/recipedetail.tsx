@@ -2,7 +2,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Recipe } from '@/constants/Recipe';
-import { useLocalSearchParams } from 'expo-router';
+import { Tabs, useLocalSearchParams } from 'expo-router';
 import { Image, Pressable, StyleSheet, View, Animated, Easing, useColorScheme } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Colors } from '@/constants/Colors';
@@ -45,14 +45,14 @@ export default function RecipeDetailScreen() {
         <ThemedText style={styles.recipeName}>{recipe.Name}</ThemedText>
         {renderDescription()}
       </ThemedView>
-      <ThemedView style={{ flexDirection: 'column', justifyContent: 'space-between', marginBottom: 8 }}>
-        <ThemedView style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+      <ThemedView style={{ flexDirection: 'column', marginBottom: 8 }}>
+        <ThemedView style={{ flexDirection: 'row', marginBottom: 8, gap: 8, flex: 1 }}>
           <RecipeInfo icon="chef-hat" community={true} info={recipe.Author} />
-          <RecipeInfo icon="restaurant" community={false}  info={recipe.Difficulty} />
+          <RecipeInfo icon="restaurant-menu" community={false} info={recipe.Difficulty} />
         </ThemedView>
-        <ThemedView style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <ThemedView style={{ flexDirection: 'row', marginBottom: 8, gap: 8, flex: 1 }}>
           <RecipeInfo icon="timer" community={false} info={recipe.Time} />
-          <RecipeInfo icon="restaurant-menu" community={false} info={recipe.Time} />
+          <RecipeInfo icon="restaurant" community={false} info={recipe.Servings} />
         </ThemedView>
       </ThemedView>
 
@@ -94,7 +94,6 @@ export default function RecipeDetailScreen() {
             ))}
           </ThemedView>
         )}
-        {/* {activeTab === 'Ingredients' && recipe.Ingredients.map((ingredient, index) => <ThemedText key={index}>{ingredient}</ThemedText>)} */}
         {activeTab === 'Instructions' && (
           <ThemedView>
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
@@ -113,13 +112,9 @@ export default function RecipeDetailScreen() {
 export function RecipeInfo({ icon, community, info }: { icon: string; community: boolean; info: string }) {
   const colorScheme = useColorScheme();
   return (
-    <ThemedView style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
       {/* if community, show community icon  */}
-      {community ? (
-        <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />
-      ) : (
-        <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />
-      )}
+      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
       <ThemedText>{info}</ThemedText>
     </ThemedView>
   );

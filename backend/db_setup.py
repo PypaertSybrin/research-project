@@ -83,7 +83,7 @@ for row in rows_to_store:
         "Author": row['author'],
         "Ratings": row['rattings'],
         "Time": totalTime,
-        "Serves": row['serves'],
+        "Servings": row['serves'],
         "Difficulty": row['difficult'],
     }
 

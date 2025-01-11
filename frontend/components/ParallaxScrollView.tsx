@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactElement } from 'react';
-import { Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { Platform, Pressable, StyleSheet, useColorScheme } from 'react-native';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
@@ -8,6 +8,7 @@ import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 // import { IconSymbol } from './ui/IconSymbol';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 const HEADER_HEIGHT = 350;
 
@@ -17,6 +18,7 @@ type Props = PropsWithChildren<{
 }>;
 
 export default function ParallaxScrollView({ children, headerImage, headerBackgroundColor }: Props) {
+  const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -40,7 +42,7 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={{ ...styles.container, paddingBottom: tabBarHeight }}>
       <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16} scrollIndicatorInsets={{ bottom }} contentContainerStyle={{ paddingBottom: bottom }}>
         <Animated.View style={[styles.header, { backgroundColor: headerBackgroundColor[colorScheme] }, headerAnimatedStyle]}>
           {/* Wrap the image and the gradient inside a container */}
@@ -90,7 +92,7 @@ const styles = StyleSheet.create({
   },
   icons: {
     position: 'absolute',
-    top: 32,
+    top: Platform.OS === 'ios' ? 48 : 32,
     zIndex: 1,
     padding: 4,
     borderRadius: 12,
@@ -115,4 +117,3 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 });
-
