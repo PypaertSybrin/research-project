@@ -9,15 +9,17 @@ import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { Recipe } from '@/constants/Recipe';
 
 const HEADER_HEIGHT = 350;
 
 type Props = PropsWithChildren<{
   headerImage: ReactElement;
   headerBackgroundColor: { dark: string; light: string };
+  recipe: Recipe;
 }>;
 
-export default function ParallaxScrollView({ children, headerImage, headerBackgroundColor }: Props) {
+export default function ParallaxScrollView({ children, headerImage, headerBackgroundColor, recipe }: Props) {
   const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';

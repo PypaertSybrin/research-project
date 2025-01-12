@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { StyleSheet, useColorScheme, View, Pressable } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { Colors } from '@/constants/Colors';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Link } from 'expo-router';
 
@@ -62,9 +62,12 @@ export function RecipeLarge({ recipe }: { recipe: Recipe }) {
                   </ThemedText>
                 </View>
               </View>
-              <ThemedText style={styles.recipeCreator} numberOfLines={1}>
-                By {recipe.Author}
-              </ThemedText>
+              <View style={{ flex: 1, gap: 4, flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                <MaterialCommunityIcons name="chef-hat" size={16} color={Colors[colorScheme ?? 'light'].primary} />
+                <ThemedText style={styles.recipeCreator} numberOfLines={1}>
+                  {recipe.Author}
+                </ThemedText>
+              </View>
             </View>
           </ThemedView>
         </ThemedView>
@@ -156,6 +159,5 @@ const styles = StyleSheet.create({
   recipeCreator: {
     fontSize: 14,
     color: '#555',
-    marginTop: 8,
   },
 });

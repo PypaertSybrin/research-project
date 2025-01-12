@@ -52,7 +52,7 @@ export default function RecipeDetailScreen() {
   );
 
   return (
-    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<Image source={{ uri: recipe.ImageUrl }} style={styles.image} />}>
+    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<Image source={{ uri: recipe.ImageUrl }} style={styles.image} />} recipe={recipe}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText style={styles.recipeName}>{recipe.Name}</ThemedText>
         {renderDescription()}
@@ -142,7 +142,6 @@ export function RecipeInfo({ icon, community, info, type }: { icon: string; comm
   const colorScheme = useColorScheme();
   return (
     <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
-      {/* if community, show community icon  */}
       {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
       <ThemedText style={{flex: 1}} numberOfLines={1}>{type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}</ThemedText>
     </ThemedView>
