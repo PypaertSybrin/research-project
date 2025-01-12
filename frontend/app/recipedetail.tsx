@@ -2,11 +2,12 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Recipe } from '@/constants/Recipe';
-import { Tabs, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Image, Pressable, StyleSheet, View, Animated, Easing, useColorScheme } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { Checkbox } from 'expo-checkbox';
 
 export default function RecipeDetailScreen() {
   const recipeParams = useLocalSearchParams();
@@ -15,8 +16,19 @@ export default function RecipeDetailScreen() {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'Ingredients' | 'Instructions'>('Ingredients');
   const translateX = useRef(new Animated.Value(0)).current;
-
   const colorScheme = useColorScheme();
+
+  const [checkedIngredients, setCheckedIngredients] = useState(
+    recipe.Ingredients.map(() => false) // Initialize an array with `false` for each ingredient
+  );
+
+  const handleCheckboxChange = (index: number) => {
+    setCheckedIngredients((prev) => {
+      const updated = [...prev];
+      updated[index] = !updated[index]; // Toggle the specific checkbox state
+      return updated;
+    });
+  };
 
   useEffect(() => {
     const toValue = activeTab === 'Ingredients' ? 0 : 1;
@@ -47,12 +59,12 @@ export default function RecipeDetailScreen() {
       </ThemedView>
       <ThemedView style={{ flexDirection: 'column', marginBottom: 8 }}>
         <ThemedView style={{ flexDirection: 'row', marginBottom: 8, gap: 8, flex: 1 }}>
-          <RecipeInfo icon="chef-hat" community={true} info={recipe.Author} />
-          <RecipeInfo icon="restaurant-menu" community={false} info={recipe.Difficulty} />
+          <RecipeInfo icon="chef-hat" community={true} info={recipe.Author} type="chef" />
+          <RecipeInfo icon="restaurant-menu" community={false} info={recipe.Difficulty} type="difficulty" />
         </ThemedView>
         <ThemedView style={{ flexDirection: 'row', marginBottom: 8, gap: 8, flex: 1 }}>
-          <RecipeInfo icon="timer" community={false} info={recipe.Time} />
-          <RecipeInfo icon="restaurant" community={false} info={recipe.Servings} />
+          <RecipeInfo icon="timer" community={false} info={recipe.Time} type="timer" />
+          <RecipeInfo icon="restaurant" community={false} info={recipe.Servings} type="servings" />
         </ThemedView>
       </ThemedView>
 
@@ -88,9 +100,25 @@ export default function RecipeDetailScreen() {
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Ingredients</ThemedText>
             <ThemedText style={{ color: '#ccc' }}>{recipe.Ingredients.length} items</ThemedText>
             {recipe.Ingredients.map((ingredient, index) => (
-              <ThemedText style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8 }} key={index}>
-                {ingredient}
-              </ThemedText>
+              <Pressable
+                key={index}
+                onPress={() => handleCheckboxChange(index)} // Toggle checkbox when ThemedView is pressed
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                  paddingVertical: 16,
+                  borderBottomColor: Colors[colorScheme ?? 'light'].primary,
+                  borderBottomWidth: 1,
+                }}
+              >
+                <Checkbox
+                  value={checkedIngredients[index]} // Checkbox state
+                  onValueChange={() => handleCheckboxChange(index)} // Toggle checkbox directly
+                  color={checkedIngredients[index] ? '#FF0000' : undefined}
+                />
+                <ThemedText style={{ flex: 1}}>{ingredient}</ThemedText>
+              </Pressable>
             ))}
           </ThemedView>
         )}
@@ -98,9 +126,10 @@ export default function RecipeDetailScreen() {
           <ThemedView>
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
             {recipe.Instructions.map((instruction, index) => (
-              <ThemedText style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8 }} key={index}>
-                {instruction}
-              </ThemedText>
+              <ThemedView style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8, flexDirection: 'row', gap: 8 }} key={index}>
+                <ThemedText style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50, alignSelf: 'flex-start'}}>{index}</ThemedText>
+                <ThemedText style={{flex: 1}}>{instruction}</ThemedText>
+              </ThemedView>
             ))}
           </ThemedView>
         )}
@@ -109,15 +138,21 @@ export default function RecipeDetailScreen() {
   );
 }
 
-export function RecipeInfo({ icon, community, info }: { icon: string; community: boolean; info: string }) {
+export function RecipeInfo({ icon, community, info, type }: { icon: string; community: boolean; info: string; type: 'chef' | 'difficulty' | 'timer' | 'servings' }) {
   const colorScheme = useColorScheme();
   return (
     <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
       {/* if community, show community icon  */}
       {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
-      <ThemedText>{info}</ThemedText>
+      <ThemedText style={{flex: 1}} numberOfLines={1}>{type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}</ThemedText>
     </ThemedView>
   );
+}
+
+function convertMinToReadableFormat(min: number) {
+  let hours = Math.floor(min / 60);
+  let minutes = min % 60;
+  return `${hours}h ${minutes}m`;
 }
 
 const styles = StyleSheet.create({
