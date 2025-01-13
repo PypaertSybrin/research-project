@@ -25,12 +25,9 @@
     "plugins": [
       "expo-router",
       [
-        "expo-splash-screen",
+        "expo-av",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
       ]
     ],
