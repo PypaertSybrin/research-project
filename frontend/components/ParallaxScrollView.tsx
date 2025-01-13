@@ -80,7 +80,6 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
         );
         await AsyncStorage.setItem('likedRecipes', JSON.stringify(updatedLikedRecipes));
       }
-      // AsyncStorage.clear()
       setIsLiked(!isLiked);
       console.log(await AsyncStorage.getItem('likedRecipes'));
     } catch (error) {

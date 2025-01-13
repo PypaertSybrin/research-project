@@ -1,5 +1,6 @@
 import json
 import os
+from typing import List
 import chromadb
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -106,6 +107,50 @@ def query_recipes(query: str):
                 "Servings": meta_results[idx]['Servings'],
                 "Score": score_results[idx],
             })
+        return JSONResponse(content={"recipes": recipes})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    
+@app.post("/get-recipes-by-ids")
+async def get_recipes_by_ids(req: Request):
+    try:
+        # Await and parse the request body
+        body = await req.body()
+        data = json.loads(body.decode("utf-8"))  # Parse JSON data
+
+        # Extract fields from the parsed data
+        ids = data.get("recipeIds")
+        print('aaaaaaaaaaaaaaaaaaaaa')
+        print(ids)
+        # Query the collection for documents matching the given IDs
+        results = collection.get(ids=ids)
+        print('bbbbbbbbbbbbbbbbbbbbbbbb')
+        print(results)
+        # Prepare the response with recipes
+        doc_results = results['documents']
+        meta_results = results['metadatas']
+        recipes = []
+        print('dddddddddddddddddddddddd')
+        print(doc_results)
+        print('eeeeeeeeeeeeeeeeeeeeeeee')
+        print(meta_results)
+        for idx, i in enumerate(doc_results):
+            t = json.loads(i)
+            recipes.append({
+                "Id": meta_results[idx]['Id'],
+                "Name": t['Name'],
+                "Description": t['Description'],
+                "Ingredients": t['Ingredients'],
+                "Instructions": t['Instructions'],
+                "DishType": t['DishType'],
+                "ImageUrl": meta_results[idx]['ImageUrl'],
+                "Author": meta_results[idx]['Author'],
+                "Difficulty": meta_results[idx]['Difficulty'],
+                "Time": meta_results[idx]['Time'],
+                "Servings": meta_results[idx]['Servings'],
+            })
+        print('cccccccccccccccccccccccc')
+        print(recipes)
         return JSONResponse(content={"recipes": recipes})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)

@@ -39,13 +39,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="shoppinglist"
-        options={{
-          title: 'ShoppingList',
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons size={28} name="format-list-bulleted" color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="account"
         options={{
           title: 'Account',
