@@ -1,15 +1,15 @@
-import type { PropsWithChildren, ReactElement } from 'react';
+import { PropsWithChildren, ReactElement, useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, useColorScheme } from 'react-native';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
-// import { IconSymbol } from './ui/IconSymbol';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Recipe } from '@/constants/Recipe';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HEADER_HEIGHT = 350;
 
@@ -39,9 +39,54 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
     };
   });
 
-  function handleBackButton() {
+  const [isLiked, setIsLiked] = useState(false);
+
+  useEffect(() => {
+    const fetchLikedRecipes = async () => {
+      try {
+        const likedRecipes = await AsyncStorage.getItem('likedRecipes');
+        if (likedRecipes) {
+          const parsedLikedRecipes = JSON.parse(likedRecipes);
+          setIsLiked(parsedLikedRecipes.includes(recipe.Id));
+        }
+      } catch (error) {
+        console.error('Error fetching liked recipes:', error);
+      }
+    };
+    fetchLikedRecipes();
+  }, []);
+
+  const handleBackButton = () => {
     router.back();
-  }
+  };
+
+  const handleLikeButton = async (recipe: Recipe) => {
+    console.log('Like button pressed');
+    
+    try {
+      const likedRecipes = await AsyncStorage.getItem('likedRecipes');
+      const parsedLikedRecipes = likedRecipes ? JSON.parse(likedRecipes) : [];
+      
+      if (!isLiked) {
+        console.log('Adding recipe to liked recipes');
+        // Add the recipe to the liked recipes
+        const updatedLikedRecipes = [...parsedLikedRecipes, recipe.Id];
+        await AsyncStorage.setItem('likedRecipes', JSON.stringify(updatedLikedRecipes));
+      } else {
+        console.log('Removing recipe from liked recipes');
+        // Remove the recipe from the liked recipes
+        const updatedLikedRecipes = parsedLikedRecipes.filter(
+          (id: string) => id !== recipe.Id
+        );
+        await AsyncStorage.setItem('likedRecipes', JSON.stringify(updatedLikedRecipes));
+      }
+      // AsyncStorage.clear()
+      setIsLiked(!isLiked);
+      console.log(await AsyncStorage.getItem('likedRecipes'));
+    } catch (error) {
+      console.error('Error handling liked recipes:', error);
+    }
+  };
 
   return (
     <ThemedView style={{ ...styles.container, paddingBottom: tabBarHeight }}>
@@ -61,8 +106,8 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
         <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 24 }}>
           <MaterialIcons name="arrow-back" size={32} color={'#000'} />
         </Pressable>
-        <Pressable onPress={() => console.log('back')} style={{ ...styles.icons, right: 24 }}>
-          <MaterialIcons name="favorite-border" size={32} color={'#000'} />
+        <Pressable onPress={() => {handleLikeButton(recipe)}} style={{ ...styles.icons, right: 24 }}>
+          <MaterialIcons name={isLiked ? 'favorite' : 'favorite-border'} size={32} color={isLiked ? '#e63946' : '#000'} />
         </Pressable>
         <ThemedView style={styles.content}>{children}</ThemedView>
       </Animated.ScrollView>
