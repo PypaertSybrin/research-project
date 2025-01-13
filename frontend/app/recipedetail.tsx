@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { Checkbox } from 'expo-checkbox';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RecipeDetailScreen() {
   const recipeParams = useLocalSearchParams();
@@ -22,12 +23,51 @@ export default function RecipeDetailScreen() {
     recipe.Ingredients.map(() => false) // Initialize an array with `false` for each ingredient
   );
 
-  const handleCheckboxChange = (index: number) => {
-    setCheckedIngredients((prev) => {
-      const updated = [...prev];
-      updated[index] = !updated[index]; // Toggle the specific checkbox state
-      return updated;
-    });
+  const handleCheckboxChange = async (index: number) => {
+    try {
+      // Retrieve the stored recipes and parse them
+      const storedRecipes = await AsyncStorage.getItem('checkedIngredients');
+      const storedRecipesParsed = storedRecipes ? JSON.parse(storedRecipes) : {};
+
+      // Ensure the recipe ID is in the stored recipes object
+      if (!storedRecipesParsed[recipe.Id]) {
+        storedRecipesParsed[recipe.Id] = [];
+      }
+
+      // Handle the checkbox state
+      const currentRecipe = storedRecipesParsed[recipe.Id];
+
+      if (!checkedIngredients[index]) {
+        // If not checked, add the index to the recipe's list of ingredients
+        if (!currentRecipe.includes(index)) {
+          currentRecipe.push(index);
+        }
+      } else {
+        // If checked, remove the index from the recipe's list of ingredients
+        const indexToRemove = currentRecipe.indexOf(index);
+        if (indexToRemove !== -1) {
+          currentRecipe.splice(indexToRemove, 1);
+        }
+      }
+
+      // If the currentRecipe array is empty, remove the recipe ID
+      if (currentRecipe.length === 0) {
+        delete storedRecipesParsed[recipe.Id];
+      }
+
+      // Save the updated recipes back to AsyncStorage
+      await AsyncStorage.setItem('checkedIngredients', JSON.stringify(storedRecipesParsed));
+      console.log(await AsyncStorage.getItem('checkedIngredients'));
+
+      // Update the local state for checkbox checked/unchecked
+      setCheckedIngredients((prev) => {
+        const updated = [...prev];
+        updated[index] = !updated[index]; // Toggle the checkbox state
+        return updated;
+      });
+    } catch (error) {
+      console.error('Error storing checked ingredients:', error);
+    }
   };
 
   useEffect(() => {
@@ -39,6 +79,24 @@ export default function RecipeDetailScreen() {
       useNativeDriver: false,
     }).start();
   }, [activeTab]);
+
+  useEffect(() => {
+    const fetchCheckedIngredients = async () => {
+      try {
+        const storedRecipes = await AsyncStorage.getItem('checkedIngredients');
+        const storedRecipesParsed = storedRecipes ? JSON.parse(storedRecipes) : {};
+
+        if (storedRecipesParsed[recipe.Id]) {
+          const checkedIndices = storedRecipesParsed[recipe.Id];
+          const updatedCheckedIngredients = recipe.Ingredients.map((_, index) => checkedIndices.includes(index));
+          setCheckedIngredients(updatedCheckedIngredients);
+        }
+      } catch (error) {
+        console.error('Error fetching checked ingredients:', error);
+      }
+    };
+    fetchCheckedIngredients();
+  }, []); // Re-fetch if recipe.Id changes
 
   const renderDescription = () => (
     <View>
@@ -117,7 +175,7 @@ export default function RecipeDetailScreen() {
                   onValueChange={() => handleCheckboxChange(index)} // Toggle checkbox directly
                   color={checkedIngredients[index] ? '#FF0000' : undefined}
                 />
-                <ThemedText style={{ flex: 1}}>{ingredient}</ThemedText>
+                <ThemedText style={{ flex: 1 }}>{ingredient}</ThemedText>
               </Pressable>
             ))}
           </ThemedView>
@@ -127,8 +185,8 @@ export default function RecipeDetailScreen() {
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
             {recipe.Instructions.map((instruction, index) => (
               <ThemedView style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8, flexDirection: 'row', gap: 8 }} key={index}>
-                <ThemedText style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50, alignSelf: 'flex-start'}}>{index}</ThemedText>
-                <ThemedText style={{flex: 1}}>{instruction}</ThemedText>
+                <ThemedText style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50, alignSelf: 'flex-start' }}>{index}</ThemedText>
+                <ThemedText style={{ flex: 1 }}>{instruction}</ThemedText>
               </ThemedView>
             ))}
           </ThemedView>
@@ -143,7 +201,9 @@ export function RecipeInfo({ icon, community, info, type }: { icon: string; comm
   return (
     <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
       {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
-      <ThemedText style={{flex: 1}} numberOfLines={1}>{type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}</ThemedText>
+      <ThemedText style={{ flex: 1 }} numberOfLines={1}>
+        {type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}
+      </ThemedText>
     </ThemedView>
   );
 }
