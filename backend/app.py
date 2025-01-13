@@ -120,20 +120,12 @@ async def get_recipes_by_ids(req: Request):
 
         # Extract fields from the parsed data
         ids = data.get("recipeIds")
-        print('aaaaaaaaaaaaaaaaaaaaa')
-        print(ids)
-        # Query the collection for documents matching the given IDs
+
+        recipes = []
         results = collection.get(ids=ids)
-        print('bbbbbbbbbbbbbbbbbbbbbbbb')
-        print(results)
-        # Prepare the response with recipes
+        
         doc_results = results['documents']
         meta_results = results['metadatas']
-        recipes = []
-        print('dddddddddddddddddddddddd')
-        print(doc_results)
-        print('eeeeeeeeeeeeeeeeeeeeeeee')
-        print(meta_results)
         for idx, i in enumerate(doc_results):
             t = json.loads(i)
             recipes.append({

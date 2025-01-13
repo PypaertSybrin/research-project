@@ -19,7 +19,7 @@ export default function TabTwoScreen() {
       const fetchLikedRecipes = async () => {
         try {
           const likedRecipes = await AsyncStorage.getItem('likedRecipes');
-          if (likedRecipes) {
+          if (likedRecipes && likedRecipes !== '[]') {
             const parsedLikedRecipes = JSON.parse(likedRecipes);
             const response = await fetch(`${backendUrl}:8000/get-recipes-by-ids`, {
               method: 'POST',
@@ -37,12 +37,13 @@ export default function TabTwoScreen() {
             if (data.recipes) {
               setLikedRecipes(data.recipes);
             }
+          } else{
+            setLikedRecipes([]);
           }
         } catch (error) {
           console.error('Error fetching liked recipes:', error);
         }
       };
-
       fetchLikedRecipes();
     }, [])
   );

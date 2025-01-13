@@ -32,11 +32,11 @@ export function RecipeSmall({ recipe }: { recipe: Recipe }) {
                 <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
               )}
             </View>
-            <View>
+            <View style={styles.recipeInfoContainer}>
               <ThemedText style={styles.recipeName} numberOfLines={2}>
                 {recipe.Name}
               </ThemedText>
-              <View style={{ flex: 1, gap: 4, flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+              <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
                 <MaterialCommunityIcons name="chef-hat" size={16} color={Colors[colorScheme ?? 'light'].primary} />
                 <ThemedText style={styles.recipeCreator} numberOfLines={1}>
                   {recipe.Author}
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 8,
     borderRadius: 12,
+    height: '100%',
   },
   imageContainer: {
     width: '100%',
@@ -88,6 +89,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
     textAlign: 'center',
+  },
+  recipeInfoContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    height: '100%',
   },
   recipeName: {
     fontSize: 16,
