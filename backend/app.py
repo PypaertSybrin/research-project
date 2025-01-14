@@ -148,9 +148,13 @@ async def get_recipes_by_ids(req: Request):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
-@app.get("/get-popular-recipes")
-async def get_popular_recipes():
+@app.post("/get-popular-recipes")
+async def get_popular_recipes(req: Request):
     try:
+        body = await req.body()
+        data = json.loads(body.decode("utf-8"))
+
+        n_results = data.get("n_results")
         # Fetch all recipes from the collection
         results = collection.get()  # No filter applied
         
@@ -174,7 +178,7 @@ async def get_popular_recipes():
         )
         # Extract the top 3 recipes
         top_recipes = []
-        for result in combined_results[:3]:
+        for result in combined_results[:n_results]:
             doc = result['doc']
             meta = result['meta']
             top_recipes.append({
@@ -202,6 +206,7 @@ async def suggest_recipes(req: Request):
         data = json.loads(body.decode("utf-8"))  # Parse JSON data
         
         likedRecipeIds = data.get("likedRecipeIds")
+        n_results = data.get("n_results")
         print(likedRecipeIds)
         if not likedRecipeIds:
             return JSONResponse(content={"error": "likedRecipeIds is required"}, status_code=400)
@@ -215,7 +220,7 @@ async def suggest_recipes(req: Request):
         print(reference_embedding)
         
         # Query similar recipes
-        suggestions = collection.query(query_embeddings=reference_embedding, n_results=6)
+        suggestions = collection.query(query_embeddings=reference_embedding, n_results=n_results)
         
         doc_results = suggestions['documents'][0]
         meta_results = suggestions['metadatas'][0]

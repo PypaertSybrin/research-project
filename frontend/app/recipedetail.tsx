@@ -109,6 +109,21 @@ export default function RecipeDetailScreen() {
     </View>
   );
 
+  const RecipeInfo = ({ icon, community, info, type }: { icon: string, community: boolean, info: string, type: 'chef' | 'difficulty' | 'timer' | 'servings' }) => (
+    <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
+      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
+      <ThemedText style={{ flex: 1 }} numberOfLines={1}>
+        {type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}
+      </ThemedText>
+    </ThemedView>
+  );
+
+  const convertMinToReadableFormat = (min: number) => {
+    let hours = Math.floor(min / 60);
+    let minutes = min % 60;
+    return `${hours}h ${minutes}m`;
+  }
+
   return (
     <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<Image source={{ uri: recipe.ImageUrl }} style={styles.image} />} recipe={recipe}>
       <ThemedView style={styles.titleContainer}>
@@ -206,24 +221,6 @@ export default function RecipeDetailScreen() {
       </ThemedView>
     </ParallaxScrollView>
   );
-}
-
-export function RecipeInfo({ icon, community, info, type }: { icon: string; community: boolean; info: string; type: 'chef' | 'difficulty' | 'timer' | 'servings' }) {
-  const colorScheme = useColorScheme();
-  return (
-    <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
-      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
-      <ThemedText style={{ flex: 1 }} numberOfLines={1}>
-        {type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}
-      </ThemedText>
-    </ThemedView>
-  );
-}
-
-function convertMinToReadableFormat(min: number) {
-  let hours = Math.floor(min / 60);
-  let minutes = min % 60;
-  return `${hours}h ${minutes}m`;
 }
 
 const styles = StyleSheet.create({
