@@ -85,6 +85,7 @@ for row in rows_to_store:
         "Time": totalTime,
         "Servings": row['serves'],
         "Difficulty": row['difficult'],
+        "Votes": row['vote_count'],
     }
 
     # Check for duplicate recipes based on name, image, and author

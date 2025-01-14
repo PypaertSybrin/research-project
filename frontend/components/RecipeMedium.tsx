@@ -8,9 +8,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Link } from 'expo-router';
 
-export function RecipeSmall({ recipe }: { recipe: Recipe }) {
+export function RecipeMedium({ recipe }: { recipe: Recipe }) {
   const colorScheme = useColorScheme();
   const [imageError, setImageError] = useState(false);
+
   return (
     <Link
       href={{
@@ -31,9 +32,17 @@ export function RecipeSmall({ recipe }: { recipe: Recipe }) {
                 <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
               )}
             </View>
-            <ThemedText style={styles.recipeName} numberOfLines={1}>
-              {recipe.Name}
-            </ThemedText>
+            <View style={styles.recipeInfoContainer}>
+              <ThemedText style={styles.recipeName} numberOfLines={2}>
+                {recipe.Name}
+              </ThemedText>
+              <View style={{ gap: 4, flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                <MaterialCommunityIcons name="chef-hat" size={16} color={Colors[colorScheme ?? 'light'].primary} />
+                <ThemedText style={styles.recipeCreator} numberOfLines={1}>
+                  {recipe.Author}
+                </ThemedText>
+              </View>
+            </View>
           </ThemedView>
         </ThemedView>
       </Pressable>

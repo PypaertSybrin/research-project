@@ -7,7 +7,7 @@ import { useColorScheme, View, StyleSheet, FlatList } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useFocusEffect } from 'expo-router';
 import React from 'react';
-import { RecipeSmall } from '@/components/RecipeSmall';
+import { RecipeMedium } from '@/components/RecipeMedium';
 
 export default function TabTwoScreen() {
   const colorScheme = useColorScheme();
@@ -76,7 +76,7 @@ export default function TabTwoScreen() {
             data={likedRecipes}
             renderItem={({ item }) => (
               <View style={styles.recipeItem}>
-                <RecipeSmall recipe={item} />
+                <RecipeMedium recipe={item} />
               </View>
             )}
             keyExtractor={(item) => item.Id.toString()}
@@ -84,7 +84,7 @@ export default function TabTwoScreen() {
             contentContainerStyle={styles.recipeListContainer}
           />
         ) : (
-          <ThemedText>No liked recipes</ThemedText>
+          <ThemedText style={{marginHorizontal: 8}}>No liked recipes</ThemedText>
         )}
       </ThemedView>
     </ThemedView>
@@ -124,6 +124,6 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   recipeItem: {
-    flexBasis: '50%', // Make sure the items are displayed in 2 columns
+    flexBasis: '50%',
   },
 });
