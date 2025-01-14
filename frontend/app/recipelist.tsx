@@ -84,7 +84,7 @@ export default function RecipeListScreen() {
         <Pressable onPress={handleBackButton} style={styles.icon}>
           <MaterialIcons name="arrow-back" size={24} color="black" />
         </Pressable>
-        <ThemedText type="title">{title}</ThemedText>
+        <ThemedText style={{fontSize: 24, fontWeight: 'bold', lineHeight: 32}}>{title}</ThemedText>
       </ThemedView>
       {recipeList.length > 0 && <VirtualizedList data={recipeList} keyExtractor={(item) => item.Id.toString()} getItem={getItem} getItemCount={getItemCount} renderItem={({ item }) => <RecipeLarge recipe={item} />} showsVerticalScrollIndicator={false} />}
     </ThemedView>

@@ -2,7 +2,7 @@
 import json
 
 
-json_file = "./data/inspiration.json"
+json_file = "./data/recipes.json"
 with open(json_file, "r") as f:
     recipes = json.load(f)
 
@@ -15,10 +15,10 @@ cat = []
 for recipe in recipes:
     totalRecipes += 1
     try:
-        if recipe['subcategory'] in cat:
+        if recipe['maincategory'] in cat:
             continue
         else:
-            cat.append(recipe['subcategory'])
+            cat.append(recipe['maincategory'])
     except:
         total += 1
         continue

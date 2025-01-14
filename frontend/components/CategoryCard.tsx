@@ -2,12 +2,17 @@ import { Pressable, View, StyleSheet } from 'react-native';
 import { ThemedView } from './ThemedView';
 import { Image } from 'expo-image';
 import { ThemedText } from './ThemedText';
+import { Link } from 'expo-router';
 
 export function CategoryCard({ title, info, image }: { title: string; info: string; image: string }) {
   const onPress = () => {
     console.log('Pressed');
   };
   return (
+    <Link href={{
+      pathname: '/recipelist',
+      params: { title: title, info: info, image: image },
+    }} asChild>
     <Pressable onPress={onPress}>
       <ThemedView style={styles.cardContainer}>
         <Image source={require('@/assets/images/background-card.svg')} style={styles.card} />
@@ -20,6 +25,7 @@ export function CategoryCard({ title, info, image }: { title: string; info: stri
         <Image source={image} style={styles.recipeOnCard} />
       </ThemedView>
     </Pressable>
+    </Link>
   );
 }
 
