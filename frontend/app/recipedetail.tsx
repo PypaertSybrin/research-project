@@ -185,7 +185,19 @@ export default function RecipeDetailScreen() {
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
             {recipe.Instructions.map((instruction, index) => (
               <ThemedView style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8, flexDirection: 'row', gap: 8 }} key={index}>
-                <ThemedText style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50, alignSelf: 'flex-start' }}>{index}</ThemedText>
+                <ThemedView
+                  style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].primary,
+                    borderRadius: 50,
+                    alignSelf: 'flex-start',
+                    justifyContent: 'center',
+                    alignItems: 'center', // Center text horizontally
+                    width: 32, // Fixed width and height to make it circular
+                    height: 32, // Same as width to maintain the circle shape
+                  }}
+                >
+                  <ThemedText>{index}</ThemedText>
+                </ThemedView>
                 <ThemedText style={{ flex: 1 }}>{instruction}</ThemedText>
               </ThemedView>
             ))}

@@ -8,11 +8,13 @@ import { Colors } from '@/constants/Colors';
 import { useFocusEffect } from 'expo-router';
 import React from 'react';
 import { RecipeMedium } from '@/components/RecipeMedium';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function TabTwoScreen() {
   const colorScheme = useColorScheme();
   const [likedRecipes, setLikedRecipes] = useState<Recipe[]>([]);
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+  const bottomTabBarHeight = useBottomTabBarHeight();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -58,10 +60,11 @@ export default function TabTwoScreen() {
           <ThemedView
             style={{
               backgroundColor: Colors[colorScheme ?? 'light'].primary,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
               borderRadius: 50,
-              position: 'relative',
+              width: 50,
+              height: 50,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
             <ThemedText>SP</ThemedText>
@@ -69,7 +72,7 @@ export default function TabTwoScreen() {
           <ThemedText>Sybrin Pypaert</ThemedText>
         </View>
       </View>
-      <ThemedView style={styles.favoriteContainer}>
+      <ThemedView style={{ ...styles.favoriteContainer, marginBottom: bottomTabBarHeight * 2 }}>
         <ThemedText style={{ fontSize: 24, fontWeight: 'bold', marginHorizontal: 8 }}>Favorites</ThemedText>
         {likedRecipes.length > 0 ? (
           <FlatList
@@ -81,7 +84,7 @@ export default function TabTwoScreen() {
             )}
             keyExtractor={(item) => item.Id.toString()}
             numColumns={2}  // Display 2 items per row
-            contentContainerStyle={styles.recipeListContainer}
+            contentContainerStyle={{...styles.recipeListContainer, paddingBottom: bottomTabBarHeight}}
           />
         ) : (
           <ThemedText style={{marginHorizontal: 8}}>No liked recipes</ThemedText>
@@ -117,11 +120,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   favoriteContainer: {
-    flex: 1,
-    marginVertical: 16,
+    marginTop: 16,
   },
   recipeListContainer: {
-    paddingBottom: 16,
+    
   },
   recipeItem: {
     flexBasis: '50%',

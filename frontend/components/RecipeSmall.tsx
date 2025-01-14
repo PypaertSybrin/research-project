@@ -4,7 +4,6 @@ import { Image } from 'expo-image';
 import { StyleSheet, useColorScheme, View, Pressable } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { Colors } from '@/constants/Colors';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Link } from 'expo-router';
 
@@ -56,11 +55,10 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 8,
     borderRadius: 12,
-    height: '100%',
   },
   imageContainer: {
-    width: '100%',
-    height: 110,
+    width: 85,
+    height: 85,
     borderRadius: 12,
   },
   image: {
@@ -69,8 +67,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   fallbackBox: {
-    width: 110,
-    height: 110,
+    width: 85,
+    height: 85,
     borderRadius: 12,
     backgroundColor: '#eee',
     justifyContent: 'center',
@@ -81,18 +79,9 @@ const styles = StyleSheet.create({
     color: '#777',
     textAlign: 'center',
   },
-  recipeInfoContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    height: '100%',
-  },
   recipeName: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  recipeCreator: {
-    fontSize: 14,
-    color: '#555',
+    width: 85,
   },
 });

@@ -65,7 +65,8 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 8,
     borderRadius: 12,
-    height: '100%',
+    flex: 1, // Ensure it fills available space
+    minHeight: 210, // Set a minimum height to make sure all recipes have the same height
   },
   imageContainer: {
     width: '100%',
@@ -94,7 +95,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
-    height: '100%',
   },
   recipeName: {
     fontSize: 16,
@@ -105,3 +105,4 @@ const styles = StyleSheet.create({
     color: '#555',
   },
 });
+

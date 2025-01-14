@@ -151,25 +151,100 @@ async def get_recipes_by_ids(req: Request):
 @app.get("/get-popular-recipes")
 async def get_popular_recipes():
     try:
-        results = collection.query(query_texts=[], n_results=10)
-        doc_results = results['documents']
-        meta_results = results['metadatas']
-        recipes = []
-        for idx, i in enumerate(doc_results):
-            t = json.loads(i)
-            recipes.append({
-                "Id": meta_results[idx]['Id'],
-                "Name": t['Name'],
-                "Description": t['Description'],
-                "Ingredients": t['Ingredients'],
-                "Instructions": t['Instructions'],
-                "DishType": t['DishType'],
-                "ImageUrl": meta_results[idx]['ImageUrl'],
-                "Author": meta_results[idx]['Author'],
-                "Difficulty": meta_results[idx]['Difficulty'],
-                "Time": meta_results[idx]['Time'],
-                "Servings": meta_results[idx]['Servings'],
+        # Fetch all recipes from the collection
+        results = collection.get()  # No filter applied
+        
+        # Check if documents and metadata exist in the results
+        doc_results = results["documents"]
+        meta_results = results["metadatas"]
+        
+        if not doc_results or not meta_results:
+            return JSONResponse(content={"recipes": [], "message": "No recipes found."})
+        
+        # Combine documents and metadata into a single list
+        combined_results = [
+            {"doc": json.loads(doc), "meta": meta_results[idx]}
+            for idx, doc in enumerate(doc_results)
+        ]
+        # Sort the combined results by votes in descending order
+        combined_results = sorted(
+            combined_results,
+            key=lambda x: x['meta'].get('Votes', 0),
+            reverse=True
+        )
+        # Extract the top 3 recipes
+        top_recipes = []
+        for result in combined_results[:3]:
+            doc = result['doc']
+            meta = result['meta']
+            top_recipes.append({
+                "Id": meta['Id'],
+                "Name": doc['Name'],
+                "Description": doc['Description'],
+                "Ingredients": doc['Ingredients'],
+                "Instructions": doc['Instructions'],
+                "DishType": doc['DishType'],
+                "ImageUrl": meta['ImageUrl'],
+                "Author": meta['Author'],
+                "Difficulty": meta['Difficulty'],
+                "Time": meta['Time'],
+                "Servings": meta['Servings'],
+                "Votes": meta['Votes'],
             })
-        return JSONResponse(content={"recipes": recipes})
+        return JSONResponse(content={"recipes": top_recipes})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    
+@app.post("/get-recommended-recipes")
+async def suggest_recipes(req: Request):
+    try:
+        body = await req.body()
+        data = json.loads(body.decode("utf-8"))  # Parse JSON data
+        
+        likedRecipeIds = data.get("likedRecipeIds")
+        print(likedRecipeIds)
+        if not likedRecipeIds:
+            return JSONResponse(content={"error": "likedRecipeIds is required"}, status_code=400)
+        
+        results = collection.get(ids=likedRecipeIds, include=['embeddings'])
+        if not results:
+            print('Recipe not found or embedding missing')
+            return JSONResponse(content={"error": "Recipe not found or embedding missing"}, status_code=404)
+            
+        reference_embedding = results['embeddings']
+        print(reference_embedding)
+        
+        # Query similar recipes
+        suggestions = collection.query(query_embeddings=reference_embedding, n_results=6)
+        
+        doc_results = suggestions['documents'][0]
+        meta_results = suggestions['metadatas'][0]
+        score_results = suggestions['distances'][0]
+        similar_recipes = []
+
+        for idx, document in enumerate(doc_results):
+            recipe_metadata = meta_results[idx]
+            
+            # Skip the reference recipe
+            if recipe_metadata['Id'] in likedRecipeIds:
+                continue
+            
+            recipe_data = json.loads(document)
+            similar_recipes.append({
+                "Id": recipe_metadata['Id'],
+                "Name": recipe_data['Name'],
+                "Description": recipe_data['Description'],
+                "Ingredients": recipe_data['Ingredients'],
+                "Instructions": recipe_data['Instructions'],
+                "DishType": recipe_data['DishType'],
+                "ImageUrl": recipe_metadata['ImageUrl'],
+                "Author": recipe_metadata['Author'],
+                "Difficulty": recipe_metadata['Difficulty'],
+                "Time": recipe_metadata['Time'],
+                "Servings": recipe_metadata['Servings'],
+                "Score": score_results[idx],
+            })
+
+        return JSONResponse(content={"recipes": similar_recipes}) 
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
