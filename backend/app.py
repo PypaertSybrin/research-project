@@ -257,7 +257,6 @@ async def suggest_recipes(req: Request):
 @app.post("/get-recipes-by-category")
 async def get_recipes_by_category(req: Request):
     try:
-        print('aaaaaaaa')
         body = await req.body()
         data = json.loads(body.decode("utf-8"))  # Parse JSON data
         
@@ -284,14 +283,11 @@ async def get_recipes_by_category(req: Request):
             key=lambda x: x['meta'].get('Votes', 0),
             reverse=True
         )
-        print('bbbbbbbbbbbbbbbbbbb')
         
 
         for result in combined_results:
-            print('cccccccccccccccccccccccc')
             doc = result['doc']
             meta = result['meta']
-            print('dddddddddddddddddddddddd')
             recipes.append({
                 "Id": meta['Id'],
                 "Name": doc['Name'],
