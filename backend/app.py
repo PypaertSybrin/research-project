@@ -253,3 +253,60 @@ async def suggest_recipes(req: Request):
         return JSONResponse(content={"recipes": similar_recipes}) 
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+    
+@app.post("/get-recipes-by-category")
+async def get_recipes_by_category(req: Request):
+    try:
+        print('aaaaaaaa')
+        body = await req.body()
+        data = json.loads(body.decode("utf-8"))  # Parse JSON data
+        
+        category = data.get("category")
+        n_results = data.get("n_results")
+        
+        if not category:
+            return JSONResponse(content={"error": "category is required"}, status_code=400)
+        
+        results = collection.get(where={"MainCategory": category}, limit=n_results)
+        
+        doc_results = results['documents']
+        meta_results = results['metadatas']
+        recipes = []
+
+        # Combine documents and metadata into a single list
+        combined_results = [
+            {"doc": json.loads(doc), "meta": meta_results[idx]}
+            for idx, doc in enumerate(doc_results)
+        ]
+        # Sort the combined results by votes in descending order
+        combined_results = sorted(
+            combined_results,
+            key=lambda x: x['meta'].get('Votes', 0),
+            reverse=True
+        )
+        print('bbbbbbbbbbbbbbbbbbb')
+        
+
+        for result in combined_results:
+            print('cccccccccccccccccccccccc')
+            doc = result['doc']
+            meta = result['meta']
+            print('dddddddddddddddddddddddd')
+            recipes.append({
+                "Id": meta['Id'],
+                "Name": doc['Name'],
+                "Description": doc['Description'],
+                "Ingredients": doc['Ingredients'],
+                "Instructions": doc['Instructions'],
+                "DishType": doc['DishType'],
+                "ImageUrl": meta['ImageUrl'],
+                "Author": meta['Author'],
+                "Difficulty": meta['Difficulty'],
+                "Time": meta['Time'],
+                "Servings": meta['Servings'],
+                "Votes": meta['Votes'],
+            })
+        
+        return JSONResponse(content={"recipes": recipes})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)

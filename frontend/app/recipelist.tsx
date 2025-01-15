@@ -14,6 +14,7 @@ export default function RecipeListScreen() {
   const params = useLocalSearchParams();
   const title = params.title;
   const type = params.type;
+  const categoryName = params.categoryName as string;
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   const [recipeList, setRecipeList] = useState<Recipe[]>([]);
 
@@ -64,10 +65,33 @@ export default function RecipeListScreen() {
         console.error('Error fetching liked recipes:', error);
       }
     };
+    const fetchCategoryRecipes = async (categoryName: string, n_results: number) => {
+      try {
+        const response = await fetch(`${backendUrl}:8000/get-recipes-by-category`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ category: categoryName, n_results: n_results }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch response from the server.');
+        }
+        const data = await response.json();
+        if (data.recipes) {
+          setRecipeList(data.recipes);
+        }
+      } catch (error) {
+        console.error('Error fetching category recipes:', error);
+      }
+    };
     if (type === 'popular') {
       getPopularRecipes(10);
-    } else {
+    } else if (type === 'recommended') {
       fetchRecommendedRecipes(10);
+    } else if (typeof categoryName === 'string') {
+      console.log('Fetching category recipes for:', categoryName);
+      fetchCategoryRecipes(categoryName, 10);
     }
   }, [type]);
 
@@ -105,6 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     width: '100%',
+    marginHorizontal: 8,
   },
   icon: {
     position: 'absolute', // Ensures the arrow stays on the left

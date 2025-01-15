@@ -28,14 +28,27 @@ def convert_to_minutes(time_str):
     return hours * 60 + minutes
 
 # Load JSON file
-json_file = "./data/recipes.json"
-with open(json_file, "r") as f:
+json_file_recipes = "./data/recipes.json"
+json_file_baking = "./data/baking.json"
+json_file_budget = "./data/budget.json"
+json_file_health = "./data/health.json"
+json_file_inspiration = "./data/inspiration.json"
+recipes = []
+with open(json_file_recipes, "r", encoding="utf-8") as f:
     recipes = json.load(f)
+with open(json_file_baking, "r", encoding="utf-8") as f:
+    recipes += json.load(f)
+with open(json_file_budget, "r", encoding="utf-8") as f:
+    recipes += json.load(f)
+with open(json_file_health, "r", encoding="utf-8") as f:
+    recipes += json.load(f)
+with open(json_file_inspiration, "r", encoding="utf-8") as f:
+    recipes += json.load(f)
 
 if not recipes:
-    raise ValueError(f"No recipes found in the JSON file '{json_file}'.")
+    raise ValueError("No recipes found in the JSON files.")
 
-rows_to_store = recipes[:200]
+rows_to_store = recipes
 
 # Lists to store all documents, metadatas, and ids
 documents = []

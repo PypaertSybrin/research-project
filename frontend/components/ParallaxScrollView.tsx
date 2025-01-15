@@ -1,5 +1,5 @@
 import { PropsWithChildren, ReactElement, useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { Platform, Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
@@ -10,22 +10,24 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Recipe } from '@/constants/Recipe';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
+import { ThemedText } from './ThemedText';
 
 const HEADER_HEIGHT = 350;
 
 type Props = PropsWithChildren<{
-  headerImage: ReactElement;
   headerBackgroundColor: { dark: string; light: string };
   recipe: Recipe;
 }>;
 
-export default function ParallaxScrollView({ children, headerImage, headerBackgroundColor, recipe }: Props) {
+export default function ParallaxScrollView({ children, headerBackgroundColor, recipe }: Props) {
   const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const bottom = useBottomTabOverflow();
+  const [imageError, setImageError] = useState(false);
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -62,11 +64,11 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
 
   const handleLikeButton = async (recipe: Recipe) => {
     console.log('Like button pressed');
-    
+
     try {
       const likedRecipes = await AsyncStorage.getItem('likedRecipes');
       const parsedLikedRecipes = likedRecipes ? JSON.parse(likedRecipes) : [];
-      
+
       if (!isLiked) {
         console.log('Adding recipe to liked recipes');
         // Add the recipe to the liked recipes
@@ -75,9 +77,7 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
       } else {
         console.log('Removing recipe from liked recipes');
         // Remove the recipe from the liked recipes
-        const updatedLikedRecipes = parsedLikedRecipes.filter(
-          (id: string) => id !== recipe.Id
-        );
+        const updatedLikedRecipes = parsedLikedRecipes.filter((id: string) => id !== recipe.Id);
         await AsyncStorage.setItem('likedRecipes', JSON.stringify(updatedLikedRecipes));
       }
       setIsLiked(!isLiked);
@@ -93,7 +93,13 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
         <Animated.View style={[styles.header, { backgroundColor: headerBackgroundColor[colorScheme] }, headerAnimatedStyle]}>
           {/* Wrap the image and the gradient inside a container */}
           <ThemedView style={styles.imageContainer}>
-            {headerImage}
+            {imageError ? (
+              <View style={styles.fallbackBox}>
+                <ThemedText style={styles.fallbackText}>No Image Found</ThemedText>
+              </View>
+            ) : (
+              <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
+            )}
             {/* Apply the gradient over the image with a transition halfway down */}
             <LinearGradient
               colors={['rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.1)']} // Transition from white to transparent
@@ -105,7 +111,12 @@ export default function ParallaxScrollView({ children, headerImage, headerBackgr
         <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 24 }}>
           <MaterialIcons name="arrow-back" size={32} color={'#000'} />
         </Pressable>
-        <Pressable onPress={() => {handleLikeButton(recipe)}} style={{ ...styles.icons, right: 24 }}>
+        <Pressable
+          onPress={() => {
+            handleLikeButton(recipe);
+          }}
+          style={{ ...styles.icons, right: 24 }}
+        >
           <MaterialIcons name={isLiked ? 'favorite' : 'favorite-border'} size={32} color={isLiked ? '#e63946' : '#000'} />
         </Pressable>
         <ThemedView style={styles.content}>{children}</ThemedView>
@@ -127,6 +138,23 @@ const styles = StyleSheet.create({
     position: 'relative', // Allows the gradient to be positioned over the image
     width: '100%',
     height: '100%',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  fallbackBox: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    backgroundColor: '#eee',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fallbackText: {
+    fontSize: 24,
+    color: '#777',
+    textAlign: 'center',
   },
   gradient: {
     position: 'absolute',

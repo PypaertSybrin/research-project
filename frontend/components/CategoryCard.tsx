@@ -4,14 +4,14 @@ import { Image } from 'expo-image';
 import { ThemedText } from './ThemedText';
 import { Link } from 'expo-router';
 
-export function CategoryCard({ title, info, image }: { title: string; info: string; image: string }) {
+export function CategoryCard({ title, info, image, categoryName }: { title: string; info: string; image: string, categoryName: string }) {
   const onPress = () => {
     console.log('Pressed');
   };
   return (
     <Link href={{
       pathname: '/recipelist',
-      params: { title: title, info: info, image: image },
+      params: { title: title, type: 'category', categoryName: categoryName },
     }} asChild>
     <Pressable onPress={onPress}>
       <ThemedView style={styles.cardContainer}>

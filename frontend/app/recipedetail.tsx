@@ -125,7 +125,7 @@ export default function RecipeDetailScreen() {
   }
 
   return (
-    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<Image source={{ uri: recipe.ImageUrl }} style={styles.image} />} recipe={recipe}>
+    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} recipe={recipe}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText style={styles.recipeName}>{recipe.Name}</ThemedText>
         {renderDescription()}
