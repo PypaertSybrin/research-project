@@ -1,60 +1,161 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { StyleSheet, ScrollView, useColorScheme, Pressable } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { CategoryCard } from '@/components/CategoryCard';
+import { Colors } from '@/constants/Colors';
+import { useEffect, useState } from 'react';
+import { Recipe } from '@/constants/Recipe';
+import { RecipeSmall } from '@/components/RecipeSmall';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RecipeLarge } from '@/components/RecipeLarge';
+import { Link } from 'expo-router';
 
 export default function HomeScreen() {
+  const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+  const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
+  const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
+  useEffect(() => {
+    const getPopularRecipes = async (n_results: number, forRecommended: boolean) => {
+      try {
+        const response = await fetch(`${backendUrl}:8000/get-popular-recipes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ n_results: n_results }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch response from the server.');
+        }
+        const data = await response.json();
+        if (data.recipes) {
+          if (forRecommended) {
+            setRecommendedRecipes(data.recipes);
+          } else {
+            setPopularRecipes(data.recipes);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching popular recipes:', error);
+      }
+    };
+    const fetchRecommendedRecipes = async (n_results: number) => {
+      try {
+        const likedRecipes = await AsyncStorage.getItem('likedRecipes');
+        if (likedRecipes && likedRecipes !== '[]') {
+          const parsedLikedRecipes = JSON.parse(likedRecipes);
+          const response = await fetch(`${backendUrl}:8000/get-recommended-recipes`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, n_results: n_results }),
+          });
+          if (!response.ok) {
+            throw new Error('Failed to fetch response from the server.');
+          }
+          const data = await response.json();
+          if (data.recipes) {
+            setRecommendedRecipes(data.recipes);
+          }
+        } else {
+          getPopularRecipes(6, true);
+        }
+      } catch (error) {
+        console.error('Error fetching liked recipes:', error);
+      }
+    };
+    getPopularRecipes(3, false);
+    fetchRecommendedRecipes(6);
+  }, []);
+
+  const SubTitle = ({ title, type }: { title: string; type: string }) => {
+    const colorScheme = useColorScheme();
+    return (
+      <ThemedView style={styles.subTitleContainer}>
+        <ThemedText style={styles.subTitle}>{title}</ThemedText>
+        <Link
+          href={{
+            pathname: '/recipelist',
+            params: { title: title, type: type },
+          }}
+          asChild
+        >
+          <Pressable>
+            <ThemedText style={{ color: Colors[colorScheme ?? 'light'].primary, fontWeight: 'bold' }}>View All</ThemedText>
+          </Pressable>
+        </Link>
+      </ThemedView>
+    );
+  };
+
   return (
-    <ThemedView>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Homescreen</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes. Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
+    <ScrollView>
+      <ThemedView style={styles.container}>
+        <ThemedText type="title" style={{ marginHorizontal: 8, textAlign: 'left' }}>
+          Hi, Sybrin
         </ThemedText>
+        <ThemedView style={styles.scrollViewWrapper}>
+          <ScrollView style={styles.scrollView} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+            <CategoryCard title="Baking recipes" info="Recipes which require baking" image={require('@/assets/images/baking-recipe.svg')} categoryName='baking' />
+            <CategoryCard title="All recipes" info="All sorts of recipes to choose from" image={require('@/assets/images/all-recipe.svg')} categoryName='recipes' />
+            <CategoryCard title="Healthy recipes" info="Recipes which are good for your health" image={require('@/assets/images/healthy-recipe.svg')} categoryName='health' />
+            <CategoryCard title="Cheap recipes" info="Recipes that are cheap to make" image={require('@/assets/images/cheap-recipe.svg')} categoryName='budget' />
+            <CategoryCard title="Inspiration recipes" info="Recipes to get inspiration from" image={require('@/assets/images/inspiration-recipe.svg')} categoryName='inspiration' />
+          </ScrollView>
+        </ThemedView>
+        <SubTitle title="Popular" type="popular" />
+        {popularRecipes.length > 0 && (
+          <ThemedView style={styles.popularRecipesContainer}>
+            {popularRecipes.map((recipe) => (
+              <RecipeSmall key={recipe.Id} recipe={recipe} />
+            ))}
+          </ThemedView>
+        )}
+        <SubTitle title="Recommended" type="recommended" />
+        {recommendedRecipes.length > 0 && (
+          <ThemedView>
+            {recommendedRecipes.map((recipe) => (
+              <RecipeLarge key={recipe.Id} recipe={recipe} />
+            ))}
+          </ThemedView>
+        )}
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>Tap the Explore tab to learn more about what's included in this starter app.</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current <ThemedText type="defaultSemiBold">app</ThemedText> to <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ThemedView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    paddingTop: 48,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+  },
+  scrollViewWrapper: {
+    marginVertical: 16,
+  },
+  scrollView: {
+    marginHorizontal: 8,
+  },
+  scrollContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  subTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginHorizontal: 8,
   },
-  stepContainer: {
-    gap: 8,
+  subTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'left',
+  },
+  popularRecipesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
   },
 });

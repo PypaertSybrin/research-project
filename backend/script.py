@@ -15,10 +15,10 @@ cat = []
 for recipe in recipes:
     totalRecipes += 1
     try:
-        if recipe['difficult'] in cat:
+        if recipe['maincategory'] in cat:
             continue
         else:
-            cat.append(recipe['difficult'])
+            cat.append(recipe['maincategory'])
     except:
         total += 1
         continue

@@ -109,8 +109,23 @@ export default function RecipeDetailScreen() {
     </View>
   );
 
+  const RecipeInfo = ({ icon, community, info, type }: { icon: string, community: boolean, info: string, type: 'chef' | 'difficulty' | 'timer' | 'servings' }) => (
+    <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
+      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
+      <ThemedText style={{ flex: 1 }} numberOfLines={1}>
+        {type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}
+      </ThemedText>
+    </ThemedView>
+  );
+
+  const convertMinToReadableFormat = (min: number) => {
+    let hours = Math.floor(min / 60);
+    let minutes = min % 60;
+    return `${hours}h ${minutes}m`;
+  }
+
   return (
-    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} headerImage={<Image source={{ uri: recipe.ImageUrl }} style={styles.image} />} recipe={recipe}>
+    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} recipe={recipe}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText style={styles.recipeName}>{recipe.Name}</ThemedText>
         {renderDescription()}
@@ -185,7 +200,19 @@ export default function RecipeDetailScreen() {
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Instructions</ThemedText>
             {recipe.Instructions.map((instruction, index) => (
               <ThemedView style={{ borderBottomColor: Colors[colorScheme ?? 'light'].primary, borderBottomWidth: 1, paddingVertical: 8, flexDirection: 'row', gap: 8 }} key={index}>
-                <ThemedText style={{ backgroundColor: Colors[colorScheme ?? 'light'].primary, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50, alignSelf: 'flex-start' }}>{index}</ThemedText>
+                <ThemedView
+                  style={{
+                    backgroundColor: Colors[colorScheme ?? 'light'].primary,
+                    borderRadius: 50,
+                    alignSelf: 'flex-start',
+                    justifyContent: 'center',
+                    alignItems: 'center', // Center text horizontally
+                    width: 32, // Fixed width and height to make it circular
+                    height: 32, // Same as width to maintain the circle shape
+                  }}
+                >
+                  <ThemedText>{index}</ThemedText>
+                </ThemedView>
                 <ThemedText style={{ flex: 1 }}>{instruction}</ThemedText>
               </ThemedView>
             ))}
@@ -194,24 +221,6 @@ export default function RecipeDetailScreen() {
       </ThemedView>
     </ParallaxScrollView>
   );
-}
-
-export function RecipeInfo({ icon, community, info, type }: { icon: string; community: boolean; info: string; type: 'chef' | 'difficulty' | 'timer' | 'servings' }) {
-  const colorScheme = useColorScheme();
-  return (
-    <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
-      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
-      <ThemedText style={{ flex: 1 }} numberOfLines={1}>
-        {type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}
-      </ThemedText>
-    </ThemedView>
-  );
-}
-
-function convertMinToReadableFormat(min: number) {
-  let hours = Math.floor(min / 60);
-  let minutes = min % 60;
-  return `${hours}h ${minutes}m`;
 }
 
 const styles = StyleSheet.create({

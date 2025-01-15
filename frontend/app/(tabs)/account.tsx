@@ -7,19 +7,21 @@ import { useColorScheme, View, StyleSheet, FlatList } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useFocusEffect } from 'expo-router';
 import React from 'react';
-import { RecipeSmall } from '@/components/RecipeSmall';
+import { RecipeMedium } from '@/components/RecipeMedium';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function TabTwoScreen() {
   const colorScheme = useColorScheme();
   const [likedRecipes, setLikedRecipes] = useState<Recipe[]>([]);
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
+  const bottomTabBarHeight = useBottomTabBarHeight();
 
   useFocusEffect(
     React.useCallback(() => {
       const fetchLikedRecipes = async () => {
         try {
           const likedRecipes = await AsyncStorage.getItem('likedRecipes');
-          if (likedRecipes) {
+          if (likedRecipes && likedRecipes !== '[]') {
             const parsedLikedRecipes = JSON.parse(likedRecipes);
             const response = await fetch(`${backendUrl}:8000/get-recipes-by-ids`, {
               method: 'POST',
@@ -37,12 +39,13 @@ export default function TabTwoScreen() {
             if (data.recipes) {
               setLikedRecipes(data.recipes);
             }
+          } else{
+            setLikedRecipes([]);
           }
         } catch (error) {
           console.error('Error fetching liked recipes:', error);
         }
       };
-
       fetchLikedRecipes();
     }, [])
   );
@@ -57,10 +60,11 @@ export default function TabTwoScreen() {
           <ThemedView
             style={{
               backgroundColor: Colors[colorScheme ?? 'light'].primary,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
               borderRadius: 50,
-              position: 'relative',
+              width: 50,
+              height: 50,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
             <ThemedText>SP</ThemedText>
@@ -68,22 +72,22 @@ export default function TabTwoScreen() {
           <ThemedText>Sybrin Pypaert</ThemedText>
         </View>
       </View>
-      <ThemedView style={styles.favoriteContainer}>
+      <ThemedView style={{ ...styles.favoriteContainer, marginBottom: bottomTabBarHeight * 2 }}>
         <ThemedText style={{ fontSize: 24, fontWeight: 'bold', marginHorizontal: 8 }}>Favorites</ThemedText>
         {likedRecipes.length > 0 ? (
           <FlatList
             data={likedRecipes}
             renderItem={({ item }) => (
               <View style={styles.recipeItem}>
-                <RecipeSmall recipe={item} />
+                <RecipeMedium recipe={item} />
               </View>
             )}
             keyExtractor={(item) => item.Id.toString()}
             numColumns={2}  // Display 2 items per row
-            contentContainerStyle={styles.recipeListContainer}
+            contentContainerStyle={{...styles.recipeListContainer, paddingBottom: bottomTabBarHeight}}
           />
         ) : (
-          <ThemedText>No liked recipes</ThemedText>
+          <ThemedText style={{marginHorizontal: 8}}>No liked recipes</ThemedText>
         )}
       </ThemedView>
     </ThemedView>
@@ -116,13 +120,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   favoriteContainer: {
-    flex: 1,
-    marginVertical: 16,
+    marginTop: 16,
   },
   recipeListContainer: {
-    paddingBottom: 16,
+    
   },
   recipeItem: {
-    flexBasis: '50%', // Make sure the items are displayed in 2 columns
+    flexBasis: '50%',
   },
 });
