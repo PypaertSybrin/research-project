@@ -100,7 +100,7 @@ export default function RecipeDetailScreen() {
 
   const renderDescription = () => (
     <View>
-      <ThemedText style={{ color: '#AAAAAA' }} numberOfLines={isDescriptionExpanded ? undefined : 2}>
+      <ThemedText style={{ color: Colors[colorScheme ?? 'light'].greyText }} numberOfLines={isDescriptionExpanded ? undefined : 2}>
         {recipe.Description}
       </ThemedText>
       <Pressable onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
@@ -111,7 +111,7 @@ export default function RecipeDetailScreen() {
 
   const RecipeInfo = ({ icon, community, info, type }: { icon: string, community: boolean, info: string, type: 'chef' | 'difficulty' | 'timer' | 'servings' }) => (
     <ThemedView style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 8 }}>
-      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].secondary} style={styles.icons} />}
+      {community ? <MaterialCommunityIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} style={{...styles.icons, backgroundColor: Colors[colorScheme ?? 'light'].greyBackground}} /> : <MaterialIcons name={icon} size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} style={{...styles.icons, backgroundColor: Colors[colorScheme ?? 'light'].greyBackground}} />}
       <ThemedText style={{ flex: 1 }} numberOfLines={1}>
         {type === 'timer' ? convertMinToReadableFormat(Number(info)) : type === 'servings' ? (info == '1' ? info + ' serving' : info + ' servings') : info}
       </ThemedText>
@@ -125,7 +125,7 @@ export default function RecipeDetailScreen() {
   }
 
   return (
-    <ParallaxScrollView headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }} recipe={recipe}>
+    <ParallaxScrollView headerBackgroundColor={{ light: Colors.light.greyBackground, dark: Colors.dark.background }} recipe={recipe}>
       <ThemedView style={styles.titleContainer}>
         <ThemedText style={styles.recipeName}>{recipe.Name}</ThemedText>
         {renderDescription()}
@@ -142,7 +142,7 @@ export default function RecipeDetailScreen() {
       </ThemedView>
 
       {/* Toggle Switch */}
-      <ThemedView style={styles.toggleContainer}>
+      <ThemedView style={{...styles.toggleContainer, backgroundColor: Colors[colorScheme ?? 'light'].greyBackground}}>
         <Animated.View
           style={[
             styles.activeBackground,
@@ -155,23 +155,24 @@ export default function RecipeDetailScreen() {
                   }),
                 },
               ],
+              backgroundColor: Colors[colorScheme ?? 'light'].secondary,
             },
           ]}
         />
         <Pressable onPress={() => setActiveTab('Ingredients')} style={styles.toggleButton}>
-          <ThemedText style={[styles.toggleButtonText, activeTab === 'Ingredients' && styles.activeButtonText]}>Ingredients</ThemedText>
+          <ThemedText style={[styles.toggleButtonText, activeTab === 'Ingredients' && {...styles.activeButtonText, color: Colors[colorScheme ?? 'light'].toggleText}]}>Ingredients</ThemedText>
         </Pressable>
         <Pressable onPress={() => setActiveTab('Instructions')} style={styles.toggleButton}>
-          <ThemedText style={[styles.toggleButtonText, activeTab === 'Instructions' && styles.activeButtonText]}>Instructions</ThemedText>
+          <ThemedText style={[styles.toggleButtonText, activeTab === 'Instructions' && {...styles.activeButtonText, color: Colors[colorScheme ?? 'light'].toggleText}]}>Instructions</ThemedText>
         </Pressable>
       </ThemedView>
 
       {/* Content based on active tab */}
-      <ThemedView style={styles.contentContainer}>
+      <ThemedView>
         {activeTab === 'Ingredients' && (
           <ThemedView>
             <ThemedText style={{ fontWeight: 'bold', fontSize: 24 }}>Ingredients</ThemedText>
-            <ThemedText style={{ color: '#ccc' }}>{recipe.Ingredients.length} items</ThemedText>
+            <ThemedText style={{ color: Colors[colorScheme ?? 'light'].greyText }}>{recipe.Ingredients.length} items</ThemedText>
             {recipe.Ingredients.map((ingredient, index) => (
               <Pressable
                 key={index}
@@ -188,7 +189,7 @@ export default function RecipeDetailScreen() {
                 <Checkbox
                   value={checkedIngredients[index]} // Checkbox state
                   onValueChange={() => handleCheckboxChange(index)} // Toggle checkbox directly
-                  color={checkedIngredients[index] ? '#FF0000' : undefined}
+                  color={checkedIngredients[index] ? Colors[colorScheme ?? 'light'].primary : undefined}
                 />
                 <ThemedText style={{ flex: 1 }}>{ingredient}</ThemedText>
               </Pressable>
@@ -236,14 +237,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   icons: {
-    backgroundColor: '#ccc',
     padding: 8,
     borderRadius: 8,
   },
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    backgroundColor: '#ccc',
     padding: 4,
     borderRadius: 8,
     position: 'relative',
@@ -253,7 +252,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: '100%',
     width: '50%',
-    backgroundColor: '#000',
     borderRadius: 8,
     marginTop: 4,
   },
@@ -263,11 +261,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleButtonText: {
-    color: '#555',
     fontSize: 16,
   },
   activeButtonText: {
-    color: '#fff',
     fontWeight: 'bold',
   },
   contentContainer: {},

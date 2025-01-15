@@ -12,6 +12,7 @@ import { Recipe } from '@/constants/Recipe';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { ThemedText } from './ThemedText';
+import { Colors } from '@/constants/Colors';
 
 const HEADER_HEIGHT = 350;
 
@@ -94,8 +95,8 @@ export default function ParallaxScrollView({ children, headerBackgroundColor, re
           {/* Wrap the image and the gradient inside a container */}
           <ThemedView style={styles.imageContainer}>
             {imageError ? (
-              <View style={styles.fallbackBox}>
-                <ThemedText style={styles.fallbackText}>No Image Found</ThemedText>
+              <View style={{...styles.fallbackBox, backgroundColor: Colors[colorScheme ?? 'light'].greyBackground}}>
+                <ThemedText style={{...styles.fallbackText, color: Colors[colorScheme ?? 'light'].greyText}}>No Image Found</ThemedText>
               </View>
             ) : (
               <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
@@ -109,7 +110,7 @@ export default function ParallaxScrollView({ children, headerBackgroundColor, re
           </ThemedView>
         </Animated.View>
         <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 24 }}>
-          <MaterialIcons name="arrow-back" size={32} color={'#000'} />
+          <MaterialIcons name="arrow-back" size={32} color={Colors[colorScheme ?? 'light'].iconDefault} />
         </Pressable>
         <Pressable
           onPress={() => {
@@ -117,7 +118,7 @@ export default function ParallaxScrollView({ children, headerBackgroundColor, re
           }}
           style={{ ...styles.icons, right: 24 }}
         >
-          <MaterialIcons name={isLiked ? 'favorite' : 'favorite-border'} size={32} color={isLiked ? '#e63946' : '#000'} />
+          <MaterialIcons name={isLiked ? 'favorite' : 'favorite-border'} size={32} color={isLiked ? Colors[colorScheme ?? 'light'].primary : Colors[colorScheme ?? 'light'].iconDefault} />
         </Pressable>
         <ThemedView style={styles.content}>{children}</ThemedView>
       </Animated.ScrollView>
@@ -147,13 +148,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 12,
-    backgroundColor: '#eee',
     justifyContent: 'center',
     alignItems: 'center',
   },
   fallbackText: {
     fontSize: 24,
-    color: '#777',
     textAlign: 'center',
   },
   gradient: {

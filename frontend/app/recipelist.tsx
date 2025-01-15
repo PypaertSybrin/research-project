@@ -1,13 +1,14 @@
 import { RecipeLarge } from '@/components/RecipeLarge';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
 import { Recipe } from '@/constants/Recipe';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, VirtualizedList } from 'react-native';
+import { Platform, Pressable, StyleSheet, useColorScheme, VirtualizedList } from 'react-native';
 
 export default function RecipeListScreen() {
   const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
@@ -17,6 +18,7 @@ export default function RecipeListScreen() {
   const categoryName = params.categoryName as string;
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   const [recipeList, setRecipeList] = useState<Recipe[]>([]);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     const getPopularRecipes = async (n_results: number) => {
@@ -106,7 +108,7 @@ export default function RecipeListScreen() {
     <ThemedView style={{ ...styles.container, paddingBottom: tabBarHeight }}>
       <ThemedView style={styles.header}>
         <Pressable onPress={handleBackButton} style={styles.icon}>
-          <MaterialIcons name="arrow-back" size={24} color="black" />
+          <MaterialIcons name="arrow-back" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
         </Pressable>
         <ThemedText style={{fontSize: 24, fontWeight: 'bold', lineHeight: 32}}>{title}</ThemedText>
       </ThemedView>
