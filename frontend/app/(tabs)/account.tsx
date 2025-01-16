@@ -56,7 +56,7 @@ export default function TabTwoScreen() {
         Account
       </ThemedText>
       <View style={styles.shadowWrapper}>
-        <View style={styles.accountContainer}>
+        <View style={{ ...styles.accountContainer, backgroundColor: Colors[colorScheme ?? 'light'].card }}>
           <ThemedView
             style={{
               backgroundColor: Colors[colorScheme ?? 'light'].primary,
@@ -112,7 +112,6 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
   },
   accountContainer: {
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     flexDirection: 'row',

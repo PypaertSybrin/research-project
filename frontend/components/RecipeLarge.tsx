@@ -28,17 +28,17 @@ export function RecipeLarge({ recipe }: { recipe: Recipe }) {
     >
       <Pressable>
         <ThemedView style={styles.shadowWrapper}>
-          <ThemedView style={{ ...styles.container, backgroundColor: Colors[colorScheme ?? 'light'].white }}>
+          <ThemedView style={{ ...styles.container, backgroundColor: Colors[colorScheme ?? 'light'].card }}>
             <View style={styles.imageContainer}>
               {imageError ? (
-                <View style={styles.fallbackBox}>
-                  <ThemedText style={styles.fallbackText}>No Image Found</ThemedText>
+                <View style={{...styles.fallbackBox, backgroundColor: Colors[colorScheme ?? 'light'].greyBackground}}>
+                  <ThemedText style={{...styles.fallbackText, color: Colors[colorScheme ?? 'light'].greyText}}>No Image Found</ThemedText>
                 </View>
               ) : (
                 <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
               )}
               <View style={styles.imageOverlay}>
-                <MaterialIcons name="favorite-border" size={24} color={Colors[colorScheme ?? 'light'].secondary} />
+                <MaterialIcons name="favorite-border" size={24} color={Colors[colorScheme ?? 'light'].iconDefault} />
               </View>
             </View>
             <View style={styles.recipeContainer}>
@@ -115,13 +115,11 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 12,
-    backgroundColor: '#eee',
     justifyContent: 'center',
     alignItems: 'center',
   },
   fallbackText: {
     fontSize: 14,
-    color: '#777',
     textAlign: 'center',
   },
   recipeContainer: {
@@ -132,7 +130,6 @@ const styles = StyleSheet.create({
   recipeName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   infoRow: {
     flexDirection: 'row',
@@ -154,10 +151,8 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 14,
-    color: '#666',
   },
   recipeCreator: {
     fontSize: 14,
-    color: '#555',
   },
 });
