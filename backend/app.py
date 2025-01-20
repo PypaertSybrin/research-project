@@ -131,9 +131,9 @@ async def get_popular_recipes(req: Request):
         body = await req.body()
         data = json.loads(body.decode("utf-8"))
 
-        n_results = data.get("n_results")
+        onHomePage = data.get("onHomePage")
         # Fetch all recipes from the collection
-        results = collection.get(limit=n_results)  # No filter applied
+        results = collection.get()  # No filter applied
         
         # Check if documents and metadata exist in the results
         doc_results = results["documents"]
@@ -142,7 +142,13 @@ async def get_popular_recipes(req: Request):
         if not doc_results or not meta_results:
             return JSONResponse(content={"recipes": [], "message": "No recipes found."})
         
+        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         top_recipes = add_recipes_to_list(doc_results, meta_results, True)
+
+        if(onHomePage):
+            top_recipes = top_recipes[:5]
+        else:
+            top_recipes = top_recipes[:1000]
         
         return JSONResponse(content={"recipes": top_recipes})
     except Exception as e:
@@ -207,12 +213,12 @@ async def get_recipes_by_category(req: Request):
     
 
 def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=None):
-    print(sorted)
     # Combine documents and metadata into a single list
     combined_results = [
         {"doc": json.loads(doc), "meta": meta_results[idx]}
         for idx, doc in enumerate(doc_results)
     ]
+    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
     if needs_sorting:
         # Sort the combined results by votes in descending order
         combined_results = sorted(
@@ -220,6 +226,7 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
             key=lambda x: x['meta'].get('Votes', 0),
             reverse=True
         )
+    print('cccccccccccccccccccccccccc')
     recipes = []
     for result in combined_results:
         doc = result['doc']
@@ -240,6 +247,7 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
             "Servings": meta['Servings'],
             "Votes": meta['Votes'],
         })
+    print('dddddddddddddddddddddddddddddddd')
     return recipes
 
 def natural_language_processing(text: str):

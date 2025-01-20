@@ -15,14 +15,14 @@ export default function HomeScreen() {
   const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
   const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
   useEffect(() => {
-    const getPopularRecipes = async (n_results: number, forRecommended: boolean) => {
+    const getPopularRecipes = async (forRecommended: boolean) => {
       try {
         const response = await fetch(`${backendUrl}:8000/get-popular-recipes`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ n_results: n_results }),
+          body: JSON.stringify({ onHomePage: true }),
         });
         if (!response.ok) {
           throw new Error('Failed to fetch response from the server.');
@@ -30,7 +30,8 @@ export default function HomeScreen() {
         const data = await response.json();
         if (data.recipes) {
           if (forRecommended) {
-            setRecommendedRecipes(data.recipes);
+            const recipesToShow = data.recipes.slice(0, 3);
+            setRecommendedRecipes(recipesToShow);
           } else {
             setPopularRecipes(data.recipes);
           }
@@ -65,7 +66,7 @@ export default function HomeScreen() {
         console.error('Error fetching liked recipes:', error);
       }
     };
-    getPopularRecipes(3, false);
+    getPopularRecipes(false);
     fetchRecommendedRecipes(6);
   }, []);
 
@@ -92,34 +93,38 @@ export default function HomeScreen() {
   return (
     <ScrollView>
       <ThemedView style={styles.container}>
-        <ThemedText type="title" style={{ marginHorizontal: 8, textAlign: 'left' }}>
+        <ThemedText type="title" style={{ marginHorizontal: 8, textAlign: 'left', marginBottom: 8 }}>
           Hi, Sybrin
         </ThemedText>
         <ThemedView style={styles.scrollViewWrapper}>
           <ScrollView style={styles.scrollView} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
-            <CategoryCard title="Baking recipes" info="Recipes which require baking" image={require('@/assets/images/baking-recipe.svg')} categoryName='baking' />
-            <CategoryCard title="All recipes" info="All sorts of recipes to choose from" image={require('@/assets/images/all-recipe.svg')} categoryName='recipes' />
-            <CategoryCard title="Healthy recipes" info="Recipes which are good for your health" image={require('@/assets/images/healthy-recipe.svg')} categoryName='health' />
-            <CategoryCard title="Cheap recipes" info="Recipes that are cheap to make" image={require('@/assets/images/cheap-recipe.svg')} categoryName='budget' />
-            <CategoryCard title="Inspiration recipes" info="Recipes to get inspiration from" image={require('@/assets/images/inspiration-recipe.svg')} categoryName='inspiration' />
+            <CategoryCard title="Baking recipes" info="Recipes which require baking" image={require('@/assets/images/baking-recipe.svg')} categoryName="baking" />
+            <CategoryCard title="All recipes" info="All sorts of recipes to choose from" image={require('@/assets/images/all-recipe.svg')} categoryName="recipes" />
+            <CategoryCard title="Healthy recipes" info="Recipes which are good for your health" image={require('@/assets/images/healthy-recipe.svg')} categoryName="health" />
+            <CategoryCard title="Cheap recipes" info="Recipes that are cheap to make" image={require('@/assets/images/cheap-recipe.svg')} categoryName="budget" />
+            <CategoryCard title="Inspiration recipes" info="Recipes to get inspiration from" image={require('@/assets/images/inspiration-recipe.svg')} categoryName="inspiration" />
           </ScrollView>
         </ThemedView>
-        <SubTitle title="Popular" type="popular" />
-        {popularRecipes.length > 0 && (
-          <ThemedView style={styles.popularRecipesContainer}>
-            {popularRecipes.map((recipe) => (
-              <RecipeSmall key={recipe.Id} recipe={recipe} />
-            ))}
-          </ThemedView>
-        )}
-        <SubTitle title="Recommended" type="recommended" />
-        {recommendedRecipes.length > 0 && (
-          <ThemedView>
-            {recommendedRecipes.map((recipe) => (
-              <RecipeLarge key={recipe.Id} recipe={recipe} />
-            ))}
-          </ThemedView>
-        )}
+        <ThemedView style={{marginTop: 8, marginBottom: 8}}> 
+          <SubTitle title="Popular" type="popular" />
+          {popularRecipes.length > 0 && (
+            <ThemedView style={styles.popularRecipesContainer}>
+              {popularRecipes.map((recipe) => (
+                <RecipeSmall key={recipe.Id} recipe={recipe} />
+              ))}
+            </ThemedView>
+          )}
+        </ThemedView>
+        <ThemedView style={{marginTop: 8}}>
+          <SubTitle title="Recommended" type="recommended" />
+          {recommendedRecipes.length > 0 && (
+            <ThemedView>
+              {recommendedRecipes.map((recipe) => (
+                <RecipeLarge key={recipe.Id} recipe={recipe} />
+              ))}
+            </ThemedView>
+          )}
+        </ThemedView>
       </ThemedView>
     </ScrollView>
   );
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   scrollViewWrapper: {
-    marginVertical: 16,
+    marginBottom: 16,
   },
   scrollView: {
     marginHorizontal: 8,
@@ -156,6 +161,5 @@ const styles = StyleSheet.create({
   popularRecipesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
   },
 });
