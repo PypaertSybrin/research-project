@@ -31,6 +31,9 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
       };
 
       if (recordingUri && dataUrl) {
+        console.log('Transcribing speech...');
+        console.log('dataUrl:', dataUrl);
+        console.log('audioConfig:', audioConfig.encoding, audioConfig.sampleRateHertz, audioConfig.languageCode);
         // const rootOrigin = Platform.OS === 'android' ? '10.0.2.2' : Device.isDevice ? process.env.LOCAL_DEV_IP || 'localhost' : 'localhost';
         // const serverUrl = `http://${rootOrigin}:8000`;
         const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;

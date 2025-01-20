@@ -71,6 +71,7 @@ async def get_recipes(req: Request):
             # Access the first alternative's transcript and add it to the converted_text
             converted_text += result['alternatives'][0]['transcript']
 
+        # converted_text = "What recipes can I make with eggs and milk"
         print(f"Converted Text: {converted_text}")
 
         # converted_text = "What recipes can I make with eggs and milk"

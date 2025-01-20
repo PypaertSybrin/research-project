@@ -30,10 +30,10 @@ export default function HomeScreen() {
         const data = await response.json();
         if (data.recipes) {
           if (forRecommended) {
-            const recipesToShow = data.recipes.slice(0, 3);
-            setRecommendedRecipes(recipesToShow);
+            setRecommendedRecipes(data.recipes);
           } else {
-            setPopularRecipes(data.recipes);
+            const recipesToShow = data.recipes.slice(0, 3);
+            setPopularRecipes(recipesToShow);
           }
         }
       } catch (error) {
