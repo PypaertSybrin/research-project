@@ -10,8 +10,6 @@ import google.generativeai as genai
 
 
 nlp = spacy.load("en_core_web_sm")
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Initialize FastAPI
 app = FastAPI()
@@ -23,6 +21,9 @@ chromadb_path = os.getenv("CHROMADB_DIRECTORY_PATH", "./chromadb")
 client = chromadb.PersistentClient(path=chromadb_path)
 collection_name = "recipes"
 collection = client.get_collection(name=collection_name)
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 @app.get("/")
 def read_root():
