@@ -40,7 +40,7 @@ export default function HomeScreen() {
         console.error('Error fetching popular recipes:', error);
       }
     };
-    const fetchRecommendedRecipes = async (n_results: number) => {
+    const fetchRecommendedRecipes = async () => {
       try {
         const likedRecipes = await AsyncStorage.getItem('likedRecipes');
         if (likedRecipes && likedRecipes !== '[]') {
@@ -50,7 +50,7 @@ export default function HomeScreen() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, n_results: n_results }),
+            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, onHomePage: true }),
           });
           if (!response.ok) {
             throw new Error('Failed to fetch response from the server.');
@@ -60,14 +60,14 @@ export default function HomeScreen() {
             setRecommendedRecipes(data.recipes);
           }
         } else {
-          getPopularRecipes(6, true);
+          getPopularRecipes(true);
         }
       } catch (error) {
         console.error('Error fetching liked recipes:', error);
       }
     };
     getPopularRecipes(false);
-    fetchRecommendedRecipes(6);
+    fetchRecommendedRecipes();
   }, []);
 
   const SubTitle = ({ title, type }: { title: string; type: string }) => {

@@ -142,7 +142,6 @@ async def get_popular_recipes(req: Request):
         if not doc_results or not meta_results:
             return JSONResponse(content={"recipes": [], "message": "No recipes found."})
         
-        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         top_recipes = add_recipes_to_list(doc_results, meta_results, True)
 
         if(onHomePage):
@@ -161,7 +160,7 @@ async def suggest_recipes(req: Request):
         data = json.loads(body.decode("utf-8"))  # Parse JSON data
         
         likedRecipeIds = data.get("likedRecipeIds")
-        n_results = data.get("n_results")
+        onHomePage = data.get("onHomePage")
         print(likedRecipeIds)
         if not likedRecipeIds:
             return JSONResponse(content={"error": "likedRecipeIds is required"}, status_code=400)
@@ -172,8 +171,12 @@ async def suggest_recipes(req: Request):
             return JSONResponse(content={"error": "Recipe not found or embedding missing"}, status_code=404)
             
         reference_embedding = results['embeddings']
-        print(reference_embedding)
         
+        if onHomePage:
+            n_results = 6
+        else:
+            n_results = 101
+
         # Query similar recipes
         suggestions = collection.query(query_embeddings=reference_embedding, n_results=n_results)
         
@@ -194,12 +197,11 @@ async def get_recipes_by_category(req: Request):
         data = json.loads(body.decode("utf-8"))  # Parse JSON data
         
         category = data.get("category")
-        n_results = data.get("n_results")
         
         if not category:
             return JSONResponse(content={"error": "category is required"}, status_code=400)
         
-        results = collection.get(where={"MainCategory": category}, limit=n_results)
+        results = collection.get(where={"MainCategory": category})
         
         doc_results = results['documents']
         meta_results = results['metadatas']
@@ -218,7 +220,6 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
         {"doc": json.loads(doc), "meta": meta_results[idx]}
         for idx, doc in enumerate(doc_results)
     ]
-    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
     if needs_sorting:
         # Sort the combined results by votes in descending order
         combined_results = sorted(
@@ -226,7 +227,6 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
             key=lambda x: x['meta'].get('Votes', 0),
             reverse=True
         )
-    print('cccccccccccccccccccccccccc')
     recipes = []
     for result in combined_results:
         doc = result['doc']
@@ -247,7 +247,6 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
             "Servings": meta['Servings'],
             "Votes": meta['Votes'],
         })
-    print('dddddddddddddddddddddddddddddddd')
     return recipes
 
 def natural_language_processing(text: str):

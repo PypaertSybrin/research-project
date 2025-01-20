@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { VirtualizedList, Pressable, StyleSheet, Platform, useColorScheme } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/ThemedView';
@@ -22,6 +22,7 @@ export default function RecipeListScreen() {
   const colorScheme = useColorScheme();
   const [isVisible, setIsVisible] = useState(false);
   const listRef = useRef<VirtualizedList<Recipe>>(null);
+  const MemoizedRecipeLarge = memo(RecipeLarge);
 
   useEffect(() => {
     const getPopularRecipes = async () => {
@@ -44,7 +45,7 @@ export default function RecipeListScreen() {
         console.error('Error fetching popular recipes:', error);
       }
     };
-    const fetchRecommendedRecipes = async (n_results: number) => {
+    const fetchRecommendedRecipes = async () => {
       try {
         const likedRecipes = await AsyncStorage.getItem('likedRecipes');
         if (likedRecipes && likedRecipes !== '[]') {
@@ -54,7 +55,7 @@ export default function RecipeListScreen() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, n_results: n_results }),
+            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, onHomePage: false }),
           });
           if (!response.ok) {
             throw new Error('Failed to fetch response from the server.');
@@ -70,14 +71,14 @@ export default function RecipeListScreen() {
         console.error('Error fetching liked recipes:', error);
       }
     };
-    const fetchCategoryRecipes = async (categoryName: string, n_results: number) => {
+    const fetchCategoryRecipes = async (categoryName: string) => {
       try {
         const response = await fetch(`${backendUrl}:8000/get-recipes-by-category`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ category: categoryName, n_results: n_results }),
+          body: JSON.stringify({ category: categoryName }),
         });
         if (!response.ok) {
           throw new Error('Failed to fetch response from the server.');
@@ -94,9 +95,9 @@ export default function RecipeListScreen() {
     if (type === 'popular') {
       getPopularRecipes();
     } else if (type === 'recommended') {
-      fetchRecommendedRecipes(10);
+      fetchRecommendedRecipes();
     } else if (typeof categoryName === 'string') {
-      fetchCategoryRecipes(categoryName, 10);
+      fetchCategoryRecipes(categoryName);
     }
   }, [type]);
 
@@ -144,7 +145,7 @@ export default function RecipeListScreen() {
           keyExtractor={(item) => item.Id.toString()}
           getItem={getItem}
           getItemCount={getItemCount}
-          renderItem={({ item }) => <RecipeLarge recipe={item} />}
+          renderItem={({ item }) => <MemoizedRecipeLarge recipe={item} />}
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}
         />
@@ -187,23 +188,5 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     borderRadius: 30,
     padding: 10,
-  },
-  skeletonCard: {
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-  },
-  skeletonImage: {
-    height: 200,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  skeletonText: {
-    height: 16,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-    marginBottom: 8,
   },
 });
