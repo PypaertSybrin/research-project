@@ -15,9 +15,8 @@ app = FastAPI()
 
 # Load environment variables from the .env file
 dotenv.load_dotenv()
-chromadb_path = os.getenv("CHROMADB_DIRECTORY_PATH", "./chromadb")
 # Initialize ChromaDB
-client = chromadb.PersistentClient(path=chromadb_path)
+client = chromadb.HttpClient(host="localhost", port=8000)
 collection_name = "recipes"
 collection = client.get_collection(name=collection_name)
 
