@@ -6,9 +6,12 @@ from fastapi.responses import JSONResponse
 import dotenv
 import requests
 import spacy
+import google.generativeai as genai
 
 
 nlp = spacy.load("en_core_web_sm")
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Initialize FastAPI
 app = FastAPI()
@@ -292,3 +295,12 @@ def natural_language_processing(text: str):
     print("Important words from the sentence:", important_sentence)
 
     return important_sentence, exclusions
+
+def nlp_2(text: str):
+    response = model.generate_content("Say Hi", generation_config={
+        genai.GenerationConfig(
+            max_output_tokens=100,
+            temperature=0.5,
+        )
+    })
+    print(response)
