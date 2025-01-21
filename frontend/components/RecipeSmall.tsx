@@ -16,6 +16,7 @@ export function RecipeSmall({ recipe }: { recipe: Recipe }) {
         pathname: '/recipedetail',
         params: { recipe: JSON.stringify(recipe) },
       }}
+      style={{ flexBasis: '33%' }}
       asChild
     >
       <Pressable>
@@ -55,9 +56,10 @@ const styles = StyleSheet.create({
     gap: 4,
     padding: 8,
     borderRadius: 12,
+    width: '100%',
   },
   imageContainer: {
-    width: 85,
+    width: '100%',
     height: 85,
     borderRadius: 12,
   },
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   fallbackBox: {
-    width: 85,
+    width: '100%',
     height: 85,
     borderRadius: 12,
     justifyContent: 'center',
@@ -80,6 +82,6 @@ const styles = StyleSheet.create({
   recipeName: {
     fontSize: 16,
     fontWeight: 'bold',
-    width: 85,
+    // width: 85,
   },
 });

@@ -15,9 +15,8 @@ app = FastAPI()
 
 # Load environment variables from the .env file
 dotenv.load_dotenv()
-chromadb_path = os.getenv("CHROMADB_DIRECTORY_PATH", "./chromadb")
 # Initialize ChromaDB
-client = chromadb.PersistentClient(path=chromadb_path)
+client = chromadb.HttpClient(host="localhost", port=8000)
 collection_name = "recipes"
 collection = client.get_collection(name=collection_name)
 
@@ -72,6 +71,7 @@ async def get_recipes(req: Request):
             # Access the first alternative's transcript and add it to the converted_text
             converted_text += result['alternatives'][0]['transcript']
 
+        # converted_text = "What recipes can I make with eggs and milk"
         print(f"Converted Text: {converted_text}")
 
         # converted_text = "What recipes can I make with eggs and milk"
@@ -131,9 +131,9 @@ async def get_popular_recipes(req: Request):
         body = await req.body()
         data = json.loads(body.decode("utf-8"))
 
-        n_results = data.get("n_results")
+        onHomePage = data.get("onHomePage")
         # Fetch all recipes from the collection
-        results = collection.get(limit=n_results)  # No filter applied
+        results = collection.get()  # No filter applied
         
         # Check if documents and metadata exist in the results
         doc_results = results["documents"]
@@ -143,6 +143,11 @@ async def get_popular_recipes(req: Request):
             return JSONResponse(content={"recipes": [], "message": "No recipes found."})
         
         top_recipes = add_recipes_to_list(doc_results, meta_results, True)
+
+        if(onHomePage):
+            top_recipes = top_recipes[:5]
+        else:
+            top_recipes = top_recipes[:1000]
         
         return JSONResponse(content={"recipes": top_recipes})
     except Exception as e:
@@ -155,7 +160,7 @@ async def suggest_recipes(req: Request):
         data = json.loads(body.decode("utf-8"))  # Parse JSON data
         
         likedRecipeIds = data.get("likedRecipeIds")
-        n_results = data.get("n_results")
+        onHomePage = data.get("onHomePage")
         print(likedRecipeIds)
         if not likedRecipeIds:
             return JSONResponse(content={"error": "likedRecipeIds is required"}, status_code=400)
@@ -166,8 +171,12 @@ async def suggest_recipes(req: Request):
             return JSONResponse(content={"error": "Recipe not found or embedding missing"}, status_code=404)
             
         reference_embedding = results['embeddings']
-        print(reference_embedding)
         
+        if onHomePage:
+            n_results = 6
+        else:
+            n_results = 101
+
         # Query similar recipes
         suggestions = collection.query(query_embeddings=reference_embedding, n_results=n_results)
         
@@ -188,12 +197,11 @@ async def get_recipes_by_category(req: Request):
         data = json.loads(body.decode("utf-8"))  # Parse JSON data
         
         category = data.get("category")
-        n_results = data.get("n_results")
         
         if not category:
             return JSONResponse(content={"error": "category is required"}, status_code=400)
         
-        results = collection.get(where={"MainCategory": category}, limit=n_results)
+        results = collection.get(where={"MainCategory": category})
         
         doc_results = results['documents']
         meta_results = results['metadatas']
@@ -207,7 +215,6 @@ async def get_recipes_by_category(req: Request):
     
 
 def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=None):
-    print(sorted)
     # Combine documents and metadata into a single list
     combined_results = [
         {"doc": json.loads(doc), "meta": meta_results[idx]}

@@ -1,14 +1,15 @@
-import { RecipeLarge } from '@/components/RecipeLarge';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
-import { Recipe } from '@/constants/Recipe';
+import React, { useState, useEffect, useRef, memo } from 'react';
+import { VirtualizedList, Pressable, StyleSheet, Platform, useColorScheme } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import { RecipeLarge } from '@/components/RecipeLarge';
+import { Colors } from '@/constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, useColorScheme, VirtualizedList } from 'react-native';
+import { Recipe } from '@/constants/Recipe';
+import { RecipeLargeSkeleton } from '@/components/RecipeLargeSkeleton';
 
 export default function RecipeListScreen() {
   const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
@@ -17,18 +18,21 @@ export default function RecipeListScreen() {
   const type = params.type;
   const categoryName = params.categoryName as string;
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-  const [recipeList, setRecipeList] = useState<Recipe[]>([]);
+  const [recipeList, setRecipeList] = useState([]);
   const colorScheme = useColorScheme();
+  const [isVisible, setIsVisible] = useState(false);
+  const listRef = useRef<VirtualizedList<Recipe>>(null);
+  const MemoizedRecipeLarge = memo(RecipeLarge);
 
   useEffect(() => {
-    const getPopularRecipes = async (n_results: number) => {
+    const getPopularRecipes = async () => {
       try {
         const response = await fetch(`${backendUrl}:8000/get-popular-recipes`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ n_results: n_results }),
+          body: JSON.stringify({ onHomePage: false }),
         });
         if (!response.ok) {
           throw new Error('Failed to fetch response from the server.');
@@ -41,7 +45,7 @@ export default function RecipeListScreen() {
         console.error('Error fetching popular recipes:', error);
       }
     };
-    const fetchRecommendedRecipes = async (n_results: number) => {
+    const fetchRecommendedRecipes = async () => {
       try {
         const likedRecipes = await AsyncStorage.getItem('likedRecipes');
         if (likedRecipes && likedRecipes !== '[]') {
@@ -51,7 +55,7 @@ export default function RecipeListScreen() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, n_results: n_results }),
+            body: JSON.stringify({ likedRecipeIds: parsedLikedRecipes, onHomePage: false }),
           });
           if (!response.ok) {
             throw new Error('Failed to fetch response from the server.');
@@ -61,20 +65,20 @@ export default function RecipeListScreen() {
             setRecipeList(data.recipes);
           }
         } else {
-          getPopularRecipes(6);
+          getPopularRecipes();
         }
       } catch (error) {
         console.error('Error fetching liked recipes:', error);
       }
     };
-    const fetchCategoryRecipes = async (categoryName: string, n_results: number) => {
+    const fetchCategoryRecipes = async (categoryName: string) => {
       try {
         const response = await fetch(`${backendUrl}:8000/get-recipes-by-category`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ category: categoryName, n_results: n_results }),
+          body: JSON.stringify({ category: categoryName }),
         });
         if (!response.ok) {
           throw new Error('Failed to fetch response from the server.');
@@ -87,18 +91,29 @@ export default function RecipeListScreen() {
         console.error('Error fetching category recipes:', error);
       }
     };
+
     if (type === 'popular') {
-      getPopularRecipes(10);
+      getPopularRecipes();
     } else if (type === 'recommended') {
-      fetchRecommendedRecipes(10);
+      fetchRecommendedRecipes();
     } else if (typeof categoryName === 'string') {
-      console.log('Fetching category recipes for:', categoryName);
-      fetchCategoryRecipes(categoryName, 10);
+      fetchCategoryRecipes(categoryName);
     }
   }, [type]);
 
   const handleBackButton = () => {
     router.back();
+  };
+
+  const handleScroll = (event: any) => {
+    const contentOffsetY = event.nativeEvent.contentOffset.y;
+    setIsVisible(contentOffsetY > 100);
+  };
+
+  const handleScrollToTop = () => {
+    if (listRef.current) {
+      listRef.current.scrollToOffset({ animated: true, offset: 0 });
+    }
   };
 
   const getItem = (data: any, index: any) => data[index];
@@ -110,9 +125,38 @@ export default function RecipeListScreen() {
         <Pressable onPress={handleBackButton} style={styles.icon}>
           <MaterialIcons name="arrow-back" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
         </Pressable>
-        <ThemedText style={{fontSize: 24, fontWeight: 'bold', lineHeight: 32}}>{title}</ThemedText>
+        <ThemedText style={{ fontSize: 24, fontWeight: 'bold', lineHeight: 32 }}>{title}</ThemedText>
       </ThemedView>
-      {recipeList.length > 0 && <VirtualizedList data={recipeList} keyExtractor={(item) => item.Id.toString()} getItem={getItem} getItemCount={getItemCount} renderItem={({ item }) => <RecipeLarge recipe={item} />} showsVerticalScrollIndicator={false} />}
+
+      {recipeList.length === 0 ? (
+        // Show skeleton cards while loading
+        <VirtualizedList
+          data={new Array(10)} // Create 10 skeleton cards
+          keyExtractor={(item, index) => index.toString()}
+          getItem={getItem}
+          getItemCount={getItemCount}
+          renderItem={() => <RecipeLargeSkeleton />}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <VirtualizedList
+          ref={listRef}
+          data={recipeList}
+          keyExtractor={(item) => item.Id.toString()}
+          getItem={getItem}
+          getItemCount={getItemCount}
+          renderItem={({ item }) => <MemoizedRecipeLarge recipe={item} />}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+        />
+      )}
+
+      {/* Scroll to top button */}
+      {isVisible && (
+        <Pressable onPress={handleScrollToTop} style={{ ...styles.scrollToTopButton, backgroundColor: Colors[colorScheme ?? 'light'].primary }}>
+          <MaterialIcons name="arrow-upward" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
+        </Pressable>
+      )}
     </ThemedView>
   );
 }
@@ -125,7 +169,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   header: {
-    position: 'relative', // Enables positioning within the header
+    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -134,7 +178,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   icon: {
-    position: 'absolute', // Ensures the arrow stays on the left
+    position: 'absolute',
     left: 0,
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    opacity: 0.8,
+    borderRadius: 30,
+    padding: 10,
   },
 });

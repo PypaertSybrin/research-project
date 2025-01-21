@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   fallbackBox: {
-    width: 110,
+    width: "100%",
     height: 110,
     borderRadius: 12,
     backgroundColor: '#eee',
