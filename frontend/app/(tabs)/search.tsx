@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-  useColorScheme,
-  Animated,
-  VirtualizedList,
-} from 'react-native';
+import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList } from 'react-native';
 import { Audio } from 'expo-av';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import { recordSpeech } from '@/functions/recordSpeech';
@@ -24,6 +17,7 @@ export default function HomeScreen() {
   const [responseRecipes, setResponseRecipes] = useState<Recipe[]>([]);
   const [permission, setPermission] = useState({ status: 'undetermined' });
   const [animations, setAnimations] = useState<Animated.Value[]>([]);
+  const [userInput, setUserInput] = useState('');
   const colorScheme = useColorScheme();
 
   useEffect(() => {
@@ -49,7 +43,9 @@ export default function HomeScreen() {
     try {
       const data = await transcribeSpeech(audioRecordingRef);
       const newRecipes = data.recipes;
+      const userInput = data.input;
       setResponseRecipes(newRecipes);
+      setUserInput(userInput);
 
       const newAnimations = newRecipes.map(() => new Animated.Value(0));
       setAnimations(newAnimations);
@@ -78,9 +74,19 @@ export default function HomeScreen() {
         <ThemedText type="title" style={{ marginBottom: 8 }}>
           Recipes
         </ThemedText>
-        <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
-          Let AI help you find the best recipes for you!
-        </ThemedText>
+
+        {userInput != '' ? (
+          <ThemedView style={styles.shadowWrapper}>
+          <ThemedView style={styles.chat}>
+            <MaterialIcons style={{alignSelf: 'flex-start'}} name="person" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
+            <ThemedText style={{flex: 1}}>{userInput.charAt(0).toUpperCase() + userInput.slice(1).toLowerCase()}</ThemedText>
+          </ThemedView>
+          </ThemedView>
+        ) : (
+          <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+            Let AI help you find the best recipes for you!
+          </ThemedText>
+        )}
         {responseRecipes.length > 0 ? (
           <VirtualizedList
             data={responseRecipes}
@@ -125,11 +131,7 @@ export default function HomeScreen() {
           onPressOut={stopRecording}
           disabled={isRecording || permission.status !== 'granted'}
         >
-          {isRecording ? (
-            <ActivityIndicator size="large" color="white" />
-          ) : (
-            <MaterialIcons name="mic" size={32} color="white" />
-          )}
+          {isRecording ? <ActivityIndicator size="large" color="white" /> : <MaterialIcons name="mic" size={32} color="white" />}
         </TouchableOpacity>
         <ThemedText type="subtitle" style={{ textAlign: 'center', marginTop: 4 }}>
           Press and hold to record
@@ -148,6 +150,23 @@ const styles = StyleSheet.create({
   },
   mainContainer: {
     flex: 1,
+  },
+  shadowWrapper: {
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+    margin: 8,
+  },
+  chat: {
+    backgroundColor: Colors.light.card,
+    padding: 8,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   backgroundImageContainer: {
     flex: 1,

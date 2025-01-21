@@ -49,29 +49,29 @@ async def get_recipes(req: Request):
         print(f"Performing speech to text conversion for audio URL: {audioUrl}")
         print(f"Audio Config: {audioConfig}")
 
-        response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
-            "config": {
-                "encoding": audioConfig["encoding"],
-                "sampleRateHertz": audioConfig["sampleRateHertz"],
-                "languageCode": audioConfig["languageCode"]
-            },
-            "audio": {
-                "content": audioUrl
-            }
-        }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
-        if response.status_code != 200:
-            print(f"Error in speech to text conversion: {response.json()}")
-            return JSONResponse(content={"error": response.json()}, status_code=500)
-        transcript_result = response.json()
-        print(f"Transcript: {transcript_result}")
-        converted_text = ""
+        # response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
+        #     "config": {
+        #         "encoding": audioConfig["encoding"],
+        #         "sampleRateHertz": audioConfig["sampleRateHertz"],
+        #         "languageCode": audioConfig["languageCode"]
+        #     },
+        #     "audio": {
+        #         "content": audioUrl
+        #     }
+        # }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
+        # if response.status_code != 200:
+        #     print(f"Error in speech to text conversion: {response.json()}")
+        #     return JSONResponse(content={"error": response.json()}, status_code=500)
+        # transcript_result = response.json()
+        # print(f"Transcript: {transcript_result}")
+        # converted_text = ""
 
-        # Iterate through all results and concatenate transcripts
-        for result in transcript_result['results']:
-            # Access the first alternative's transcript and add it to the converted_text
-            converted_text += result['alternatives'][0]['transcript']
+        # # Iterate through all results and concatenate transcripts
+        # for result in transcript_result['results']:
+        #     # Access the first alternative's transcript and add it to the converted_text
+        #     converted_text += result['alternatives'][0]['transcript']
 
-        # converted_text = "What recipes can I make with eggs and milk"
+        converted_text = "What recipes can I make with eggs and milk"
         print(f"Converted Text: {converted_text}")
 
         # converted_text = "What recipes can I make with eggs and milk"
@@ -94,7 +94,7 @@ async def get_recipes(req: Request):
         meta_results = results['metadatas'][0]
         recipes = []
         recipes = add_recipes_to_list(doc_results, meta_results, False)
-        return JSONResponse(content={"recipes": recipes})
+        return JSONResponse(content={"recipes": recipes, "input": converted_text})
         # TODO return better responses
     except json.JSONDecodeError:
         print("Invalid JSON in the request body")
