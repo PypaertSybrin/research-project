@@ -40,6 +40,7 @@ export default function HomeScreen() {
   const stopRecording = async () => {
     if (!isRecording) return;
     setResponseRecipes([]);
+    setUserInput('...');
     try {
       const data = await transcribeSpeech(audioRecordingRef);
       const newRecipes = data.recipes;
