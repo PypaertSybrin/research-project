@@ -70,6 +70,8 @@ export default function TabTwoScreen() {
     getUserName();
   }, []);
 
+  // test
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={{ marginBottom: 8 }}>
