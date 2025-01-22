@@ -3,12 +3,10 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
+import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -17,21 +15,41 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  const [username, setUsername] = useState<string | null>(null); // null indicates loading state
+  const [isCheckingUsername, setIsCheckingUsername] = useState(true);
+
+  const checkUsername = async () => {
+    try {
+      const storedUsername = await AsyncStorage.getItem('username');
+      if (storedUsername) {
+        setUsername(storedUsername as string);
+      }
+    } catch (error) {
+      console.error('Error fetching username:', error);
+    } finally {
+      setIsCheckingUsername(false); // Mark username check as complete
+    }
+  };
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      checkUsername();
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  if (!loaded || isCheckingUsername) {
+    return null; // Show nothing until fonts and username check are complete
   }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+        {username ? (
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        ) : (
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+        )}
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

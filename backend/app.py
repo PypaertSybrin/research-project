@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 import dotenv
 import requests
 import spacy
+import google.generativeai as genai
+import re
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -19,6 +21,11 @@ dotenv.load_dotenv()
 client = chromadb.HttpClient(host="localhost", port=8000)
 collection_name = "recipes"
 collection = client.get_collection(name=collection_name)
+
+# Initialize llm
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+print(os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 @app.get("/")
 def read_root():
@@ -71,31 +78,38 @@ async def get_recipes(req: Request):
             # Access the first alternative's transcript and add it to the converted_text
             converted_text += result['alternatives'][0]['transcript']
 
-        # converted_text = "What recipes can I make with eggs and milk"
-        print(f"Converted Text: {converted_text}")
+        # converted_text = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
+        # print(f"Converted Text: {converted_text}")
 
         # converted_text = "What recipes can I make with eggs and milk"
 
-        important_sentence, exclusions = natural_language_processing(converted_text)
+        # important_sentence, exclusions = nlp_v1(converted_text)
+
+        important_sentence, exclusions = nlp_v2(converted_text)
+
+        # print(f"Important Sentence: {important_sentence}")
+        # print(f"Exclusions: {exclusions}")
+
+        # exclusions = []
+        # important_sentence = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
         
 
         # Build the filter using $and to combine the exclusion terms
-        if not exclusions:
-            results = collection.query(query_texts=important_sentence, n_results=10)
+        if not exclusions or exclusions == [""]:
+            results = collection.query(query_texts=important_sentence, n_results=50)
         elif len(exclusions) == 1:
-            results = collection.query(query_texts=important_sentence, n_results=10, where_document={"$not_contains": exclusions[0]})
+            results = collection.query(query_texts=important_sentence, n_results=50, where_document={"$not_contains": exclusions[0]})
         else:
             filters = {"$and": []}
             # Add each exclusion as a $not_contains condition for Ingredients
             for exclusion in exclusions:
                 filters["$and"].append({"$not_contains": exclusion})
-            results = collection.query(query_texts=important_sentence, n_results=10, where_document=filters)
+            results = collection.query(query_texts=important_sentence, n_results=50, where_document=filters)
         doc_results = results['documents'][0]
         meta_results = results['metadatas'][0]
         recipes = []
         recipes = add_recipes_to_list(doc_results, meta_results, False)
-        return JSONResponse(content={"recipes": recipes})
-        # TODO return better responses
+        return JSONResponse(content={"recipes": recipes, "input": converted_text})
     except json.JSONDecodeError:
         print("Invalid JSON in the request body")
         return JSONResponse(content={"error": "Invalid JSON in the request body"}, status_code=400)
@@ -249,7 +263,7 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
         })
     return recipes
 
-def natural_language_processing(text: str):
+def nlp_v1(text: str):
     doc = nlp(text)
     print("Processed Text:", doc)
 
@@ -299,3 +313,43 @@ def natural_language_processing(text: str):
     print("Important words from the sentence:", important_sentence)
 
     return important_sentence, exclusions
+
+def nlp_v2(input: str):
+    try:
+        prompt = f"Extract the important parts and exclusions from the following text. Exclusions can be specified as things to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). Important parts are the ingredients or key items to include. Output the important parts and exclusions as separate lists, in the following format:\n\nImportant parts: [item1, item2, ...]\nExclusions: [item1, item2, ...]\n\nText: {input}"
+        
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                max_output_tokens=200,  # Adjust as needed for larger inputs
+                temperature=0.5,  # Adjust creativity, lower for more factual answers
+            )
+        )
+
+        print("Response from LLM:", response.text)
+        response = response.text
+        # Use regex to extract the lists of important parts and exclusions
+        important_parts_match = re.search(r"Important parts:\s*\[(.*?)\]", response, re.IGNORECASE)
+        exclusions_match = re.search(r"Exclusions:\s*\[(.*?)\]", response, re.IGNORECASE)
+
+        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        
+        # Convert the matches to lists
+        important_parts = important_parts_match.group(1).split(", ") if important_parts_match else []
+        exclusions = exclusions_match.group(1).split(", ") if exclusions_match else []
+
+        print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+        
+        # Remove any extra whitespace or quotes
+        important_parts = [item.strip().strip('"').strip("'") for item in important_parts]
+        if not important_parts:
+            important_parts = []
+        important_sentence = " ".join([word for word in important_parts])
+        exclusions = [item.strip().strip('"').strip("'") for item in exclusions]
+        if not exclusions:
+            exclusions = []
+        print('cccccccccccccccccccccccccccccccc')
+        return important_sentence, exclusions
+    except Exception as e:
+        print(f"Error in LLM: {str(e)}")
+        return "", []
