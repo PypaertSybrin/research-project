@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, useColorScheme, Pressable } from 'react-native';
+import { StyleSheet, ScrollView, useColorScheme, Pressable, ActivityIndicator } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { CategoryCard } from '@/components/CategoryCard';
@@ -8,12 +8,15 @@ import { Recipe } from '@/constants/Recipe';
 import { RecipeSmall } from '@/components/RecipeSmall';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RecipeLarge } from '@/components/RecipeLarge';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 
 export default function HomeScreen() {
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   const [popularRecipes, setPopularRecipes] = useState<Recipe[]>([]);
   const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const colorScheme = useColorScheme();
   useEffect(() => {
     const getPopularRecipes = async (forRecommended: boolean) => {
       try {
@@ -70,6 +73,24 @@ export default function HomeScreen() {
     fetchRecommendedRecipes();
   }, []);
 
+  useEffect(() => {
+    const getUserName = async () => {
+      try {
+        const username = await AsyncStorage.getItem('username');
+        if (!username) {
+          router.replace('/login');
+        }
+        setUserName(username);
+      } catch (error) {
+        console.error('Error fetching username:', error);
+        setIsLoading(false); // Ensure loading is set to false even on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    getUserName();
+  }, []);
+
   const SubTitle = ({ title, type }: { title: string; type: string }) => {
     const colorScheme = useColorScheme();
     return (
@@ -93,8 +114,8 @@ export default function HomeScreen() {
   return (
     <ScrollView>
       <ThemedView style={styles.container}>
-        <ThemedText type="title" style={{ marginHorizontal: 8, textAlign: 'left', marginBottom: 8 }}>
-          Hi, Sybrin
+        <ThemedText style={{ marginHorizontal: 8, textAlign: 'left', marginBottom: 8, fontSize: 24 }}>
+          Hi, {isLoading ? '...' : userName}!
         </ThemedText>
         <ThemedView style={styles.scrollViewWrapper}>
           <ScrollView style={styles.scrollView} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>

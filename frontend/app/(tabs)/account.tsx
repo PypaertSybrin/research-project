@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Recipe } from '@/constants/Recipe';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme, View, StyleSheet, FlatList } from 'react-native';
 import { Colors } from '@/constants/Colors';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import React from 'react';
 import { RecipeMedium } from '@/components/RecipeMedium';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -15,6 +15,8 @@ export default function TabTwoScreen() {
   const [likedRecipes, setLikedRecipes] = useState<Recipe[]>([]);
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
   const bottomTabBarHeight = useBottomTabBarHeight();
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -50,6 +52,24 @@ export default function TabTwoScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    const getUserName = async () => {
+      try {
+        const username = await AsyncStorage.getItem('username');
+        if (!username) {
+          router.replace('/login');
+        }
+        setUserName(username);
+      } catch (error) {
+        console.error('Error fetching username:', error);
+        setIsLoading(false); // Ensure loading is set to false even on error
+      } finally {
+        setIsLoading(false); // Ensure loading is set to false even on error
+      }
+    };
+    getUserName();
+  }, []);
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={{ marginBottom: 8 }}>
@@ -69,7 +89,7 @@ export default function TabTwoScreen() {
           >
             <ThemedText>SP</ThemedText>
           </ThemedView>
-          <ThemedText>Sybrin Pypaert</ThemedText>
+          <ThemedText>{isLoading ? '' : userName}</ThemedText>
         </View>
       </View>
       <ThemedView style={{ ...styles.favoriteContainer, marginBottom: bottomTabBarHeight * 2 }}>
