@@ -24,7 +24,6 @@ collection = client.get_collection(name=collection_name)
 
 # Initialize llm
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-print(os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 @app.get("/")
@@ -56,36 +55,38 @@ async def get_recipes(req: Request):
         print(f"Performing speech to text conversion for audio URL: {audioUrl}")
         print(f"Audio Config: {audioConfig}")
 
-        response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
-            "config": {
-                "encoding": audioConfig["encoding"],
-                "sampleRateHertz": audioConfig["sampleRateHertz"],
-                "languageCode": audioConfig["languageCode"]
-            },
-            "audio": {
-                "content": audioUrl
-            }
-        }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
-        if response.status_code != 200:
-            print(f"Error in speech to text conversion: {response.json()}")
-            return JSONResponse(content={"error": response.json()}, status_code=500)
-        transcript_result = response.json()
-        print(f"Transcript: {transcript_result}")
-        converted_text = ""
+        # response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
+        #     "config": {
+        #         "encoding": audioConfig["encoding"],
+        #         "sampleRateHertz": audioConfig["sampleRateHertz"],
+        #         "languageCode": audioConfig["languageCode"]
+        #     },
+        #     "audio": {
+        #         "content": audioUrl
+        #     }
+        # }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
+        # if response.status_code != 200:
+        #     print(f"Error in speech to text conversion: {response.json()}")
+        #     return JSONResponse(content={"error": response.json()}, status_code=500)
+        # transcript_result = response.json()
+        # print(f"Transcript: {transcript_result}")
+        # converted_text = ""
 
-        # Iterate through all results and concatenate transcripts
-        for result in transcript_result['results']:
-            # Access the first alternative's transcript and add it to the converted_text
-            converted_text += result['alternatives'][0]['transcript']
+        # # Iterate through all results and concatenate transcripts
+        # for result in transcript_result['results']:
+        #     # Access the first alternative's transcript and add it to the converted_text
+        #     converted_text += result['alternatives'][0]['transcript']
 
         # converted_text = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
         # print(f"Converted Text: {converted_text}")
 
-        # converted_text = "What recipes can I make with eggs and milk"
+        converted_text = "Do you have some smoothie recipes that are healthy and easy to make?"
+        converted_text = "I would like some sushi"
+        converted_text = "What about some recipes with chicken and rice?"
 
-        # important_sentence, exclusions = nlp_v1(converted_text)
+        important_sentence, exclusions = nlp_v1(converted_text)
 
-        important_sentence, exclusions = nlp_v2(converted_text)
+        # important_sentence, exclusions = nlp_v2(converted_text)
 
         # print(f"Important Sentence: {important_sentence}")
         # print(f"Exclusions: {exclusions}")
@@ -97,6 +98,7 @@ async def get_recipes(req: Request):
         # Build the filter using $and to combine the exclusion terms
         if not exclusions or exclusions == [""]:
             results = collection.query(query_texts=important_sentence, n_results=50)
+            print(results["distances"][0])
         elif len(exclusions) == 1:
             results = collection.query(query_texts=important_sentence, n_results=50, where_document={"$not_contains": exclusions[0]})
         else:
@@ -105,8 +107,12 @@ async def get_recipes(req: Request):
             for exclusion in exclusions:
                 filters["$and"].append({"$not_contains": exclusion})
             results = collection.query(query_texts=important_sentence, n_results=50, where_document=filters)
-        doc_results = results['documents'][0]
-        meta_results = results['metadatas'][0]
+        print('aaaaaaaaaaaaaaaaaaaaa')
+        filtered_results = [result for result in results['distances'][0] if int(result) < 1]
+        print('bbbbbbbbbbbbbbbbbbbbbb')
+        print(filtered_results)
+        doc_results = filtered_results['documents'][0]
+        meta_results = filtered_results['metadatas'][0]
         recipes = []
         recipes = add_recipes_to_list(doc_results, meta_results, False)
         return JSONResponse(content={"recipes": recipes, "input": converted_text})
