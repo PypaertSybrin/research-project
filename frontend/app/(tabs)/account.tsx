@@ -70,7 +70,10 @@ export default function TabTwoScreen() {
     getUserName();
   }, []);
 
-  // test
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    return names.map((n) => n[0]).join('');
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -89,7 +92,7 @@ export default function TabTwoScreen() {
               alignItems: 'center',
             }}
           >
-            <ThemedText>SP</ThemedText>
+            <ThemedText>{isLoading ? '' : getInitials(userName as string)}</ThemedText>
           </ThemedView>
           <ThemedText>{isLoading ? '' : userName}</ThemedText>
         </View>

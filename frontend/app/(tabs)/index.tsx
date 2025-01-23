@@ -9,6 +9,9 @@ import { RecipeSmall } from '@/components/RecipeSmall';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RecipeLarge } from '@/components/RecipeLarge';
 import { Link, router } from 'expo-router';
+import { RecipeSmallSkeletonList } from '@/components/RecipeSmallSkeletonList';
+import { RecipeLargeSkeleton } from '@/components/RecipeLargeSkeleton';
+import { RecipeLargeSkeletonList } from '@/components/RecipeLargeSkeletonList';
 
 export default function HomeScreen() {
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -114,9 +117,7 @@ export default function HomeScreen() {
   return (
     <ScrollView>
       <ThemedView style={styles.container}>
-        <ThemedText style={{ marginHorizontal: 8, textAlign: 'left', marginBottom: 8, fontSize: 24 }}>
-          Hi, {isLoading ? '...' : userName}!
-        </ThemedText>
+        <ThemedText style={{ marginHorizontal: 8, textAlign: 'left', marginBottom: 8, fontSize: 24 }}>Hi, {isLoading ? '...' : userName}!</ThemedText>
         <ThemedView style={styles.scrollViewWrapper}>
           <ScrollView style={styles.scrollView} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
             <CategoryCard title="Baking recipes" info="Recipes which require baking" image={require('@/assets/images/baking-recipe.svg')} categoryName="baking" />
@@ -126,9 +127,13 @@ export default function HomeScreen() {
             <CategoryCard title="Inspiration recipes" info="Recipes to get inspiration from" image={require('@/assets/images/inspiration-recipe.svg')} categoryName="inspiration" />
           </ScrollView>
         </ThemedView>
-        <ThemedView style={{marginTop: 8, marginBottom: 8}}> 
+        <ThemedView style={{ marginTop: 8, marginBottom: 8 }}>
           <SubTitle title="Popular" type="popular" />
-          {popularRecipes.length > 0 && (
+          {popularRecipes.length === 0 ? (
+            <ThemedView style={{...styles.popularRecipesContainer}}>
+              <RecipeSmallSkeletonList count={3} />
+            </ThemedView>
+          ): (
             <ThemedView style={styles.popularRecipesContainer}>
               {popularRecipes.map((recipe) => (
                 <RecipeSmall key={recipe.Id} recipe={recipe} />
@@ -136,9 +141,13 @@ export default function HomeScreen() {
             </ThemedView>
           )}
         </ThemedView>
-        <ThemedView style={{marginTop: 8}}>
+        <ThemedView style={{ marginTop: 8 }}>
           <SubTitle title="Recommended" type="recommended" />
-          {recommendedRecipes.length > 0 && (
+          {recommendedRecipes.length === 0 ? (
+            <ThemedView>
+              <RecipeLargeSkeletonList count={3} />
+            </ThemedView>
+          ) : (
             <ThemedView>
               {recommendedRecipes.map((recipe) => (
                 <RecipeLarge key={recipe.Id} recipe={recipe} />

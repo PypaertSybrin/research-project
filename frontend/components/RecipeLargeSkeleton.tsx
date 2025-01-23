@@ -1,7 +1,6 @@
 import { StyleSheet, View, Animated, useColorScheme } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { Colors } from '@/constants/Colors';
-import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 
 export function RecipeLargeSkeleton() {

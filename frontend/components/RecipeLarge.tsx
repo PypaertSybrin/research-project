@@ -37,9 +37,6 @@ export function RecipeLarge({ recipe }: { recipe: Recipe }) {
               ) : (
                 <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
               )}
-              <View style={styles.imageOverlay}>
-                <MaterialIcons name="favorite-border" size={24} color={Colors[colorScheme ?? 'light'].iconDefault} />
-              </View>
             </View>
             <View style={styles.recipeContainer}>
               <ThemedText style={styles.recipeName} numberOfLines={1}>
@@ -95,16 +92,6 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-  },
-  imageOverlay: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 4,
   },
   image: {
     width: 110,

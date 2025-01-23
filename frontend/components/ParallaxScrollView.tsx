@@ -1,7 +1,6 @@
-import { PropsWithChildren, ReactElement, useEffect, useState } from 'react';
+import { PropsWithChildren, useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
 
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
@@ -101,12 +100,6 @@ export default function ParallaxScrollView({ children, headerBackgroundColor, re
             ) : (
               <Image style={styles.image} source={{ uri: recipe.ImageUrl }} onError={() => setImageError(true)} />
             )}
-            {/* Apply the gradient over the image with a transition halfway down */}
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.1)']} // Transition from white to transparent
-              locations={[0, 0.6, 1]} // Define where the gradient changes
-              style={styles.gradient}
-            />
           </ThemedView>
         </Animated.View>
         <Pressable onPress={handleBackButton} style={{ ...styles.icons, left: 24 }}>
