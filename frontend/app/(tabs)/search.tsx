@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList } from 'react-native';
+import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList, View, Button } from 'react-native';
 import { Audio } from 'expo-av';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import { recordSpeech } from '@/functions/recordSpeech';
@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { RecipeLarge } from '@/components/RecipeLarge';
 import { Recipe } from '@/constants/Recipe';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Speech from 'expo-speech';
 
 export default function HomeScreen() {
   const [isRecording, setIsRecording] = useState(false);
@@ -43,6 +44,12 @@ export default function HomeScreen() {
     setUserInput('...');
     try {
       const data = await transcribeSpeech(audioRecordingRef);
+      if(data.recipes.length === 0) {
+        setUserInput('No recipes found');
+        speak('I am sorry, I could not find any recipes related to your request');
+        return;
+      }
+      speak('Here are some recipes I found for you');
       const newRecipes = data.recipes;
       const userInput = data.input;
       setResponseRecipes(newRecipes);
@@ -69,6 +76,10 @@ export default function HomeScreen() {
   const getItem = (data: any, index: any) => data[index];
   const getItemCount = (data: any) => data.length;
 
+  const speak = (textToSay: string) => {
+    Speech.speak(textToSay, {language: 'en-GB'});
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.mainContainer}>
@@ -78,10 +89,10 @@ export default function HomeScreen() {
 
         {userInput != '' ? (
           <ThemedView style={styles.shadowWrapper}>
-          <ThemedView style={styles.chat}>
-            <MaterialIcons style={{alignSelf: 'flex-start'}} name="person" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
-            <ThemedText style={{flex: 1}}>{userInput.charAt(0).toUpperCase() + userInput.slice(1).toLowerCase()}</ThemedText>
-          </ThemedView>
+            <ThemedView style={styles.chat}>
+              <MaterialIcons style={{ alignSelf: 'flex-start' }} name="person" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
+              <ThemedText style={{ flex: 1 }}>{userInput.charAt(0).toUpperCase() + userInput.slice(1).toLowerCase()}</ThemedText>
+            </ThemedView>
           </ThemedView>
         ) : (
           <ThemedText type="subtitle" style={{ marginBottom: 16 }}>

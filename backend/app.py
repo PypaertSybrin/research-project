@@ -24,6 +24,7 @@ collection = client.get_collection(name=collection_name)
 
 # Initialize llm
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+print(os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 @app.get("/")
@@ -98,7 +99,6 @@ async def get_recipes(req: Request):
         # Build the filter using $and to combine the exclusion terms
         if not exclusions or exclusions == [""]:
             results = collection.query(query_texts=important_sentence, n_results=50)
-            print(results["distances"][0])
         elif len(exclusions) == 1:
             results = collection.query(query_texts=important_sentence, n_results=50, where_document={"$not_contains": exclusions[0]})
         else:
@@ -107,12 +107,15 @@ async def get_recipes(req: Request):
             for exclusion in exclusions:
                 filters["$and"].append({"$not_contains": exclusion})
             results = collection.query(query_texts=important_sentence, n_results=50, where_document=filters)
-        print('aaaaaaaaaaaaaaaaaaaaa')
-        filtered_results = [result for result in results['distances'][0] if int(result) < 1]
-        print('bbbbbbbbbbbbbbbbbbbbbb')
-        print(filtered_results)
-        doc_results = filtered_results['documents'][0]
-        meta_results = filtered_results['metadatas'][0]
+        # If distance is less than 0.5, then it is a good match
+        filtered_results = {"documents": [], "metadatas": []}
+        for idx, distance in enumerate(results["distances"][0]):
+            if distance < 1:
+                filtered_results["documents"].append(results["documents"][0][idx])
+                filtered_results["metadatas"].append(results["metadatas"][0][idx])
+        print(len(filtered_results["documents"]))
+        doc_results = filtered_results['documents']
+        meta_results = filtered_results['metadatas']
         recipes = []
         recipes = add_recipes_to_list(doc_results, meta_results, False)
         return JSONResponse(content={"recipes": recipes, "input": converted_text})
