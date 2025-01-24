@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   recipeInfo: {
-    paddingVertical: 4,
+    paddingVertical: 2,
     paddingHorizontal: 12,
     borderRadius: 50,
     fontSize: 14,

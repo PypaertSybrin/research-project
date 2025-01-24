@@ -58,7 +58,7 @@ export default function HomeScreen() {
     setUserInput('...');
     try {
       const data = await transcribeSpeech(audioRecordingRef);
-      if (data === undefined){
+      if (data === undefined) {
         setHasNotRecordedYet(true);
         setUserInput('...');
         speak('I am sorry, I could not transcribe your request, please try again.');
@@ -116,7 +116,7 @@ export default function HomeScreen() {
 
         {userInput !== '' ? (
           <ThemedView style={styles.shadowWrapper}>
-            <ThemedView style={{...styles.chat, backgroundColor: Colors[colorScheme ?? 'light'].card}}>
+            <ThemedView style={{ ...styles.chat, backgroundColor: Colors[colorScheme ?? 'light'].card }}>
               <MaterialIcons style={{ alignSelf: 'flex-start' }} name="person" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
               <ThemedText style={{ flex: 1 }}>{userInput.charAt(0).toUpperCase() + userInput.slice(1).toLowerCase()}</ThemedText>
             </ThemedView>
@@ -172,18 +172,13 @@ export default function HomeScreen() {
         )}
       </ThemedView>
       <LinearGradient
-        colors={[
-          Colors[colorScheme ?? 'light'].background + '00',
-          Colors[colorScheme ?? 'light'].background + 'FF',
-          Colors[colorScheme ?? 'light'].background + 'FF',
-        ]}
+        colors={[Colors[colorScheme ?? 'light'].background + '00', Colors[colorScheme ?? 'light'].background + 'FF', Colors[colorScheme ?? 'light'].background + 'FF']}
         locations={[0, 0.7, 1]}
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
           bottom: 0,
-          flex: 1,
         }}
       >
         <TouchableOpacity
@@ -198,7 +193,7 @@ export default function HomeScreen() {
         >
           {isRecording ? <ActivityIndicator size="large" color="white" /> : <MaterialIcons name="mic" size={32} color="white" />}
         </TouchableOpacity>
-        <ThemedText style={{ textAlign: 'center', marginTop: 4, marginBottom: 16}}>Press and hold to record</ThemedText>
+        <ThemedText style={{ textAlign: 'center', marginTop: 4, marginBottom: 16 }}>Press and hold to record</ThemedText>
       </LinearGradient>
     </ThemedView>
   );
@@ -224,7 +219,6 @@ const styles = StyleSheet.create({
     margin: 8,
   },
   chat: {
-    backgroundColor: Colors.light.card,
     padding: 8,
     borderRadius: 8,
     flexDirection: 'row',

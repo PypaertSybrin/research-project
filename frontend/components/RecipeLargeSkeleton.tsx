@@ -29,7 +29,7 @@ export function RecipeLargeSkeleton() {
           <ThemedText style={styles.skeletonText}></ThemedText>
 
           <View style={styles.infoRow}>
-            <ThemedText style={{ ...styles.skeletonText, height: 32, width: 60, borderRadius: 16 }}></ThemedText>
+            <ThemedText style={{ ...styles.skeletonText, height: 24, width: 48, borderRadius: 16 }}></ThemedText>
             <ThemedText style={{ ...styles.skeletonText, width: 60 }}></ThemedText>
           </View>
 

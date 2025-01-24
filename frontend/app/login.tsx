@@ -47,7 +47,7 @@ export default function LoginScreen() {
       </ThemedText>
 
       <TextInput
-        style={{...styles.input, backgroundColor: Colors[colorScheme ?? 'light'].card, borderColor: Colors[colorScheme ?? 'light'].greyBackground}}
+        style={{...styles.input, backgroundColor: Colors[colorScheme ?? 'light'].card, borderColor: Colors[colorScheme ?? 'light'].greyBackground, color: colorScheme === 'light' ? Colors.light.secondary : 'white'}}
         placeholder="Enter a username"
         placeholderTextColor={Colors[colorScheme ?? 'light'].greyText}
         value={usernameInput}
