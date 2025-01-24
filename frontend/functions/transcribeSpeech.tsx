@@ -12,9 +12,11 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
     const isPrepared = audioRecordingRef?.current?._canRecord;
     if (isPrepared) {
       await audioRecordingRef?.current?.stopAndUnloadAsync();
-
+      console.log('Recording stopped and unloaded');
       const recordingUri = audioRecordingRef?.current?.getURI() || '';
       let base64Uri = '';
+
+      console.log('Recording URI:', recordingUri);
 
       base64Uri = await FileSystem.readAsStringAsync(recordingUri, {
         encoding: FileSystem.EncodingType.Base64,
@@ -52,11 +54,9 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
         return await response.json();
       }
     } else {
-      console.error('Recording must be prepared prior to unloading');
       return undefined;
     }
   } catch (e) {
-    console.error('Failed to transcribe speech!', e);
     return undefined;
   }
 };

@@ -11,6 +11,7 @@ import re
 
 
 nlp = spacy.load("en_core_web_sm")
+# TODO: spacy uit requirements file halen
 
 # Initialize FastAPI
 app = FastAPI()
@@ -24,7 +25,6 @@ collection = client.get_collection(name=collection_name)
 
 # Initialize llm
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-print(os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 @app.get("/")
@@ -81,13 +81,15 @@ async def get_recipes(req: Request):
         # converted_text = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
         # print(f"Converted Text: {converted_text}")
 
-        converted_text = "Do you have some smoothie recipes that are healthy and easy to make?"
-        converted_text = "I would like some sushi"
-        converted_text = "What about some recipes with chicken and rice?"
+        # converted_text = "Do you have some smoothie recipes that are healthy and easy to make?"
+        # converted_text = "I would like some sushi"
+        converted_text = "sushi recipes"
+        answer = ""
 
         important_sentence, exclusions = nlp_v1(converted_text)
 
-        # important_sentence, exclusions = nlp_v2(converted_text)
+        # important_sentence, exclusions, answer = nlp_v2(converted_text)
+        # print(answer)
 
         # print(f"Important Sentence: {important_sentence}")
         # print(f"Exclusions: {exclusions}")
@@ -110,7 +112,8 @@ async def get_recipes(req: Request):
         # If distance is less than 0.5, then it is a good match
         filtered_results = {"documents": [], "metadatas": []}
         for idx, distance in enumerate(results["distances"][0]):
-            if distance < 1:
+            print(distance)
+            if distance < 1.2:
                 filtered_results["documents"].append(results["documents"][0][idx])
                 filtered_results["metadatas"].append(results["metadatas"][0][idx])
         print(len(filtered_results["documents"]))
@@ -118,7 +121,7 @@ async def get_recipes(req: Request):
         meta_results = filtered_results['metadatas']
         recipes = []
         recipes = add_recipes_to_list(doc_results, meta_results, False)
-        return JSONResponse(content={"recipes": recipes, "input": converted_text})
+        return JSONResponse(content={"recipes": recipes, "input": converted_text, "answer": answer})
     except json.JSONDecodeError:
         print("Invalid JSON in the request body")
         return JSONResponse(content={"error": "Invalid JSON in the request body"}, status_code=400)
@@ -325,7 +328,17 @@ def nlp_v1(text: str):
 
 def nlp_v2(input: str):
     try:
-        prompt = f"Extract the important parts and exclusions from the following text. Exclusions can be specified as things to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). Important parts are the ingredients or key items to include. Output the important parts and exclusions as separate lists, in the following format:\n\nImportant parts: [item1, item2, ...]\nExclusions: [item1, item2, ...]\n\nText: {input}"
+        prompt = (
+            f"Extract the important parts and exclusions from the following text. "
+            f"Important parts are the ingredients or key items to include, and exclusions are things to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). "
+            f"Output the important parts and exclusions as separate lists, and then create a concise, single-sentence response that is purely based on the input, starting with 'Here are some recipes for ...'. The sentence must directly address the important parts and exclusions, without adding unrelated text.\n\n"
+            f"Format:\n"
+            f"Important parts: [item1, item2, ...]\n"
+            f"Exclusions: [item1, item2, ...]\n"
+            f"Answer: [One concise sentence starting with 'Here are some recipes for ...']\n\n"
+            f"Text: {input}"
+        )
+
         
         response = model.generate_content(
             prompt,
@@ -336,29 +349,26 @@ def nlp_v2(input: str):
         )
 
         print("Response from LLM:", response.text)
-        response = response.text
-        # Use regex to extract the lists of important parts and exclusions
-        important_parts_match = re.search(r"Important parts:\s*\[(.*?)\]", response, re.IGNORECASE)
-        exclusions_match = re.search(r"Exclusions:\s*\[(.*?)\]", response, re.IGNORECASE)
+        response_text = response.text
 
-        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        
-        # Convert the matches to lists
+        # Extract important parts
+        important_parts_match = re.search(r"Important parts:\s*\[(.*?)\]", response_text, re.IGNORECASE)
         important_parts = important_parts_match.group(1).split(", ") if important_parts_match else []
+
+        # Extract exclusions
+        exclusions_match = re.search(r"Exclusions:\s*\[(.*?)\]", response_text, re.IGNORECASE)
         exclusions = exclusions_match.group(1).split(", ") if exclusions_match else []
 
-        print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
-        
-        # Remove any extra whitespace or quotes
+        # Extract answer sentence
+        answer_match = re.search(r"Answer:\s*(Here are some recipes for .*?)\n", response_text, re.IGNORECASE)
+        answer_sentence = answer_match.group(1).strip() if answer_match else "No answer provided."
+
+        # Clean lists
         important_parts = [item.strip().strip('"').strip("'") for item in important_parts]
-        if not important_parts:
-            important_parts = []
-        important_sentence = " ".join([word for word in important_parts])
         exclusions = [item.strip().strip('"').strip("'") for item in exclusions]
-        if not exclusions:
-            exclusions = []
-        print('cccccccccccccccccccccccccccccccc')
-        return important_sentence, exclusions
+
+        print("Answer from LLM:" + answer_sentence)
+        return important_parts, exclusions, answer_sentence
     except Exception as e:
         print(f"Error in LLM: {str(e)}")
         return "", []

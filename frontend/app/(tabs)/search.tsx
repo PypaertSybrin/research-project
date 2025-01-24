@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList, View, Button } from 'react-native';
+import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList, Text } from 'react-native';
 import { Audio } from 'expo-av';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import { recordSpeech } from '@/functions/recordSpeech';
@@ -11,6 +11,8 @@ import { RecipeLarge } from '@/components/RecipeLarge';
 import { Recipe } from '@/constants/Recipe';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
+import { RecipeLargeSkeleton } from '@/components/RecipeLargeSkeleton';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen() {
   const [isRecording, setIsRecording] = useState(false);
@@ -19,7 +21,10 @@ export default function HomeScreen() {
   const [permission, setPermission] = useState({ status: 'undetermined' });
   const [animations, setAnimations] = useState<Animated.Value[]>([]);
   const [userInput, setUserInput] = useState('');
+  const [hasNotRecordedYet, setHasNotRecordedYet] = useState(true);
   const colorScheme = useColorScheme();
+
+  const listRef = useRef<VirtualizedList<Recipe>>(null); // Ref for VirtualizedList
 
   useEffect(() => {
     const requestOrGetPermissions = async () => {
@@ -31,6 +36,13 @@ export default function HomeScreen() {
     requestOrGetPermissions();
   }, []);
 
+  useEffect(() => {
+    // Scroll to the top when new recipes are loaded
+    if (responseRecipes.length > 0 && listRef.current) {
+      listRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
+  }, [responseRecipes]);
+
   const startRecording = async () => {
     if (permission.status === 'granted') {
       setIsRecording(true);
@@ -40,16 +52,31 @@ export default function HomeScreen() {
 
   const stopRecording = async () => {
     if (!isRecording) return;
+    setHasNotRecordedYet(false);
+    setIsRecording(false);
     setResponseRecipes([]);
     setUserInput('...');
     try {
       const data = await transcribeSpeech(audioRecordingRef);
-      if(data.recipes.length === 0) {
-        setUserInput('No recipes found');
-        speak('I am sorry, I could not find any recipes related to your request');
+      if (data === undefined){
+        setHasNotRecordedYet(true);
+        setUserInput('...');
+        speak('I am sorry, I could not transcribe your request, please try again.');
         return;
       }
-      speak('Here are some recipes I found for you');
+      if (data.recipes.length === 0) {
+        setHasNotRecordedYet(true);
+        setUserInput(data.input);
+        speak('I am sorry, I could not find any recipes related to your request, please be more specific or try something else.');
+        return;
+      }
+      const answer = data.answer;
+      if (answer !== '') {
+        console.log(answer);
+        speak(answer);
+      } else {
+        speak('Here are some recipes I found for you');
+      }
       const newRecipes = data.recipes;
       const userInput = data.input;
       setResponseRecipes(newRecipes);
@@ -77,7 +104,7 @@ export default function HomeScreen() {
   const getItemCount = (data: any) => data.length;
 
   const speak = (textToSay: string) => {
-    Speech.speak(textToSay, {language: 'en-GB'});
+    Speech.speak(textToSay, { language: 'en-GB' });
   };
 
   return (
@@ -87,9 +114,9 @@ export default function HomeScreen() {
           Recipes
         </ThemedText>
 
-        {userInput != '' ? (
+        {userInput !== '' ? (
           <ThemedView style={styles.shadowWrapper}>
-            <ThemedView style={styles.chat}>
+            <ThemedView style={{...styles.chat, backgroundColor: Colors[colorScheme ?? 'light'].card}}>
               <MaterialIcons style={{ alignSelf: 'flex-start' }} name="person" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
               <ThemedText style={{ flex: 1 }}>{userInput.charAt(0).toUpperCase() + userInput.slice(1).toLowerCase()}</ThemedText>
             </ThemedView>
@@ -99,12 +126,28 @@ export default function HomeScreen() {
             Let AI help you find the best recipes for you!
           </ThemedText>
         )}
-        {responseRecipes.length > 0 ? (
+        {hasNotRecordedYet ? (
+          <ThemedView style={styles.backgroundImageContainer}>
+            <Image source={require('@/assets/images/recipe.svg')} style={styles.backgroundImage} />
+          </ThemedView>
+        ) : responseRecipes.length === 0 ? (
           <VirtualizedList
-            data={responseRecipes}
-            keyExtractor={(item) => item.Id.toString()}
+            data={new Array(10)} // Create 10 skeleton cards
+            keyExtractor={(item, index) => index.toString()}
             getItem={getItem}
             getItemCount={getItemCount}
+            renderItem={() => <RecipeLargeSkeleton />}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <VirtualizedList
+            ref={listRef} // Assign the ref
+            data={responseRecipes}
+            keyExtractor={(item, index) => `${item.Id}-${index}`}
+            getItem={getItem}
+            getItemCount={getItemCount}
+            initialNumToRender={10}
+            onEndReachedThreshold={0.5}
             renderItem={({ item, index }) => (
               <Animated.View
                 style={{
@@ -126,18 +169,28 @@ export default function HomeScreen() {
             )}
             showsVerticalScrollIndicator={false}
           />
-        ) : (
-          <ThemedView style={styles.backgroundImageContainer}>
-            <Image source={require('@/assets/images/recipe.svg')} style={styles.backgroundImage} />
-          </ThemedView>
         )}
       </ThemedView>
-      <ThemedView style={{ backgroundColor: Colors[colorScheme ?? 'light'].background }}>
+      <LinearGradient
+        colors={[
+          Colors[colorScheme ?? 'light'].background + '00',
+          Colors[colorScheme ?? 'light'].background + 'FF',
+          Colors[colorScheme ?? 'light'].background + 'FF',
+        ]}
+        locations={[0, 0.7, 1]}
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          flex: 1,
+        }}
+      >
         <TouchableOpacity
           style={{
             ...styles.microphoneButton,
             opacity: isRecording || permission.status !== 'granted' ? 0.5 : 1,
-            backgroundColor: Colors[colorScheme ?? 'light'].secondary,
+            backgroundColor: colorScheme === 'light' ? Colors.light.secondary : Colors.dark.primary,
           }}
           onPressIn={startRecording}
           onPressOut={stopRecording}
@@ -145,10 +198,8 @@ export default function HomeScreen() {
         >
           {isRecording ? <ActivityIndicator size="large" color="white" /> : <MaterialIcons name="mic" size={32} color="white" />}
         </TouchableOpacity>
-        <ThemedText type="subtitle" style={{ textAlign: 'center', marginTop: 4 }}>
-          Press and hold to record
-        </ThemedText>
-      </ThemedView>
+        <ThemedText style={{ textAlign: 'center', marginTop: 4, marginBottom: 16}}>Press and hold to record</ThemedText>
+      </LinearGradient>
     </ThemedView>
   );
 }

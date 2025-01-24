@@ -3,7 +3,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Recipe } from '@/constants/Recipe';
 import { useLocalSearchParams } from 'expo-router';
-import { Image, Pressable, StyleSheet, View, Animated, Easing, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, View, Animated, Easing, useColorScheme, Text } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -215,7 +215,7 @@ export default function RecipeDetailScreen() {
                     height: 32, // Same as width to maintain the circle shape
                   }}
                 >
-                  <ThemedText>{index + 1}</ThemedText>
+                  <Text>{index + 1}</Text>
                 </ThemedView>
                 <ThemedText style={{ flex: 1 }}>{instruction}</ThemedText>
               </ThemedView>
