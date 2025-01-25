@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   infoRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
@@ -141,5 +142,6 @@ const styles = StyleSheet.create({
   },
   recipeCreator: {
     fontSize: 14,
+    flex: 1,
   },
 });

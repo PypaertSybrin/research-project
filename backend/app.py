@@ -56,39 +56,39 @@ async def get_recipes(req: Request):
         print(f"Performing speech to text conversion for audio URL: {audioUrl}")
         print(f"Audio Config: {audioConfig}")
 
-        # response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
-        #     "config": {
-        #         "encoding": audioConfig["encoding"],
-        #         "sampleRateHertz": audioConfig["sampleRateHertz"],
-        #         "languageCode": audioConfig["languageCode"]
-        #     },
-        #     "audio": {
-        #         "content": audioUrl
-        #     }
-        # }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
-        # if response.status_code != 200:
-        #     print(f"Error in speech to text conversion: {response.json()}")
-        #     return JSONResponse(content={"error": response.json()}, status_code=500)
-        # transcript_result = response.json()
-        # print(f"Transcript: {transcript_result}")
-        # converted_text = ""
+        response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
+            "config": {
+                "encoding": audioConfig["encoding"],
+                "sampleRateHertz": audioConfig["sampleRateHertz"],
+                "languageCode": audioConfig["languageCode"]
+            },
+            "audio": {
+                "content": audioUrl
+            }
+        }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")}, timeout=10)
+        if response.status_code != 200:
+            print(f"Error in speech to text conversion: {response.json()}")
+            return JSONResponse(content={"error": response.json()}, status_code=500)
+        transcript_result = response.json()
+        print(f"Transcript: {transcript_result}")
+        converted_text = ""
 
-        # # Iterate through all results and concatenate transcripts
-        # for result in transcript_result['results']:
-        #     # Access the first alternative's transcript and add it to the converted_text
-        #     converted_text += result['alternatives'][0]['transcript']
+        # Iterate through all results and concatenate transcripts
+        for result in transcript_result['results']:
+            # Access the first alternative's transcript and add it to the converted_text
+            converted_text += result['alternatives'][0]['transcript']
 
         # converted_text = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
         # print(f"Converted Text: {converted_text}")
 
         # converted_text = "Do you have some smoothie recipes that are healthy and easy to make?"
         # converted_text = "I would like some sushi"
-        converted_text = "sushi recipes"
-        answer = ""
+        # converted_text = "sushi recipes"
+        # answer = ""
 
-        important_sentence, exclusions = nlp_v1(converted_text)
+        # important_sentence, exclusions = nlp_v1(converted_text)
 
-        # important_sentence, exclusions, answer = nlp_v2(converted_text)
+        important_sentence, exclusions, answer = nlp_v2(converted_text)
         # print(answer)
 
         # print(f"Important Sentence: {important_sentence}")

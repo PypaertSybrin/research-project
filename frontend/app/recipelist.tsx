@@ -6,13 +6,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { RecipeLarge } from '@/components/RecipeLarge';
 import { Colors } from '@/constants/Colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Recipe } from '@/constants/Recipe';
 import { RecipeLargeSkeleton } from '@/components/RecipeLargeSkeleton';
 
 export default function RecipeListScreen() {
-  const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
   const params = useLocalSearchParams();
   const title = params.title;
   const type = params.type;
@@ -102,6 +100,7 @@ export default function RecipeListScreen() {
   }, [type]);
 
   const handleBackButton = () => {
+    console.log('Back button pressed');
     router.back();
   };
 
@@ -120,12 +119,12 @@ export default function RecipeListScreen() {
   const getItemCount = (data: any) => data.length;
 
   return (
-    <ThemedView style={{ ...styles.container, paddingBottom: tabBarHeight }}>
+    <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
         <Pressable onPress={handleBackButton} style={styles.icon}>
           <MaterialIcons name="arrow-back" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
         </Pressable>
-        <ThemedText style={{ fontSize: 24, fontWeight: 'bold', lineHeight: 32 }}>{title}</ThemedText>
+        <ThemedText style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center' }}>{title}</ThemedText>
       </ThemedView>
 
       {recipeList.length === 0 ? (
@@ -170,16 +169,12 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
     marginBottom: 16,
     width: '100%',
-    marginHorizontal: 8,
   },
   icon: {
     position: 'absolute',
-    left: 0,
+    left: 8,
   },
   scrollToTopButton: {
     position: 'absolute',

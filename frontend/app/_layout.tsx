@@ -45,11 +45,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-        {username ? (
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        ) : (
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-        )}
+        {username ? <Stack.Screen name="(tabs)" /> : <Stack.Screen name="login" />}
+        <Stack.Screen name="recipelist" />
+        <Stack.Screen name="recipedetail" />
+        <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

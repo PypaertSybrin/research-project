@@ -1,12 +1,9 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
-
 import { ThemedView } from '@/components/ThemedView';
-import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Recipe } from '@/constants/Recipe';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
@@ -21,12 +18,10 @@ type Props = PropsWithChildren<{
 }>;
 
 export default function ParallaxScrollView({ children, headerBackgroundColor, recipe }: Props) {
-  const tabBarHeight = Platform.OS === 'ios' ? useBottomTabBarHeight() : 0;
   const router = useRouter();
   const colorScheme = useColorScheme() ?? 'light';
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
-  const bottom = useBottomTabOverflow();
   const [imageError, setImageError] = useState(false);
   const headerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -88,8 +83,8 @@ export default function ParallaxScrollView({ children, headerBackgroundColor, re
   };
 
   return (
-    <ThemedView style={{ ...styles.container, paddingBottom: tabBarHeight }}>
-      <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16} scrollIndicatorInsets={{ bottom }} contentContainerStyle={{ paddingBottom: bottom }}>
+    <ThemedView style={{ ...styles.container }}>
+      <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16}>
         <Animated.View style={[styles.header, { backgroundColor: headerBackgroundColor[colorScheme] }, headerAnimatedStyle]}>
           {/* Wrap the image and the gradient inside a container */}
           <ThemedView style={styles.imageContainer}>

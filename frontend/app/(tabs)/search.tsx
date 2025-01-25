@@ -14,7 +14,7 @@ import * as Speech from 'expo-speech';
 import { RecipeLargeSkeleton } from '@/components/RecipeLargeSkeleton';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function HomeScreen() {
+export default function SearchScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const audioRecordingRef = useRef(new Audio.Recording());
   const [responseRecipes, setResponseRecipes] = useState<Recipe[]>([]);

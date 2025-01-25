@@ -10,7 +10,7 @@ import React from 'react';
 import { RecipeMedium } from '@/components/RecipeMedium';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
-export default function TabTwoScreen() {
+export default function AccountScreen() {
   const colorScheme = useColorScheme();
   const [likedRecipes, setLikedRecipes] = useState<Recipe[]>([]);
   const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
