@@ -31,13 +31,7 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
       };
 
       if (recordingUri && dataUrl) {
-        console.log('Transcribing speech...');
-        console.log('dataUrl:', dataUrl);
-        console.log('audioConfig:', audioConfig.encoding, audioConfig.sampleRateHertz, audioConfig.languageCode);
-        // const rootOrigin = Platform.OS === 'android' ? '10.0.2.2' : Device.isDevice ? process.env.LOCAL_DEV_IP || 'localhost' : 'localhost';
-        // const serverUrl = `http://${rootOrigin}:8000`;
         const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-        // if android, this url, else, other url
         const response = await fetch(`${backendUrl}:8000/get-recipes`, {
           method: 'POST',
           headers: {
@@ -52,11 +46,9 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
         return await response.json();
       }
     } else {
-      console.error('Recording must be prepared prior to unloading');
       return undefined;
     }
   } catch (e) {
-    console.error('Failed to transcribe speech!', e);
     return undefined;
   }
 };

@@ -5,12 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import dotenv
 import requests
-import spacy
 import google.generativeai as genai
 import re
-
-
-nlp = spacy.load("en_core_web_sm")
 
 # Initialize FastAPI
 app = FastAPI()
@@ -55,50 +51,33 @@ async def get_recipes(req: Request):
         print(f"Performing speech to text conversion for audio URL: {audioUrl}")
         print(f"Audio Config: {audioConfig}")
 
-        # response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
-        #     "config": {
-        #         "encoding": audioConfig["encoding"],
-        #         "sampleRateHertz": audioConfig["sampleRateHertz"],
-        #         "languageCode": audioConfig["languageCode"]
-        #     },
-        #     "audio": {
-        #         "content": audioUrl
-        #     }
-        # }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")})
-        # if response.status_code != 200:
-        #     print(f"Error in speech to text conversion: {response.json()}")
-        #     return JSONResponse(content={"error": response.json()}, status_code=500)
-        # transcript_result = response.json()
-        # print(f"Transcript: {transcript_result}")
-        # converted_text = ""
+        response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
+            "config": {
+                "encoding": audioConfig["encoding"],
+                "sampleRateHertz": audioConfig["sampleRateHertz"],
+                "languageCode": audioConfig["languageCode"]
+            },
+            "audio": {
+                "content": audioUrl
+            }
+        }, headers={"Content-Type": "application/json", "X-Goog-Api-Key": os.getenv("GOOGLE_API_KEY")}, timeout=10)
+        if response.status_code != 200:
+            print(f"Error in speech to text conversion: {response.json()}")
+            return JSONResponse(content={"error": response.json()}, status_code=500)
+        transcript_result = response.json()
+        print(f"Transcript: {transcript_result}")
+        converted_text = ""
 
-        # # Iterate through all results and concatenate transcripts
-        # for result in transcript_result['results']:
-        #     # Access the first alternative's transcript and add it to the converted_text
-        #     converted_text += result['alternatives'][0]['transcript']
+        # Iterate through all results and concatenate transcripts
+        for result in transcript_result['results']:
+            # Access the first alternative's transcript and add it to the converted_text
+            converted_text += result['alternatives'][0]['transcript']
 
-        # converted_text = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
-        # print(f"Converted Text: {converted_text}")
-
-        converted_text = "Do you have some smoothie recipes that are healthy and easy to make?"
-        converted_text = "I would like some sushi"
-        converted_text = "What about some recipes with chicken and rice?"
-
-        important_sentence, exclusions = nlp_v1(converted_text)
-
-        # important_sentence, exclusions = nlp_v2(converted_text)
-
-        # print(f"Important Sentence: {important_sentence}")
-        # print(f"Exclusions: {exclusions}")
-
-        # exclusions = []
-        # important_sentence = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
-        
+        important_sentence, exclusions, answer = nlp_text_preprocessing(converted_text)
 
         # Build the filter using $and to combine the exclusion terms
         if not exclusions or exclusions == [""]:
             results = collection.query(query_texts=important_sentence, n_results=50)
-            print(results["distances"][0])
         elif len(exclusions) == 1:
             results = collection.query(query_texts=important_sentence, n_results=50, where_document={"$not_contains": exclusions[0]})
         else:
@@ -107,15 +86,19 @@ async def get_recipes(req: Request):
             for exclusion in exclusions:
                 filters["$and"].append({"$not_contains": exclusion})
             results = collection.query(query_texts=important_sentence, n_results=50, where_document=filters)
-        print('aaaaaaaaaaaaaaaaaaaaa')
-        filtered_results = [result for result in results['distances'][0] if int(result) < 1]
-        print('bbbbbbbbbbbbbbbbbbbbbb')
-        print(filtered_results)
-        doc_results = filtered_results['documents'][0]
-        meta_results = filtered_results['metadatas'][0]
+        # If distance is less than 0.5, then it is a good match
+        filtered_results = {"documents": [], "metadatas": []}
+        for idx, distance in enumerate(results["distances"][0]):
+            print(distance)
+            if distance < 1.2:
+                filtered_results["documents"].append(results["documents"][0][idx])
+                filtered_results["metadatas"].append(results["metadatas"][0][idx])
+        print(len(filtered_results["documents"]))
+        doc_results = filtered_results['documents']
+        meta_results = filtered_results['metadatas']
         recipes = []
         recipes = add_recipes_to_list(doc_results, meta_results, False)
-        return JSONResponse(content={"recipes": recipes, "input": converted_text})
+        return JSONResponse(content={"recipes": recipes, "input": converted_text, "answer": answer})
     except json.JSONDecodeError:
         print("Invalid JSON in the request body")
         return JSONResponse(content={"error": "Invalid JSON in the request body"}, status_code=400)
@@ -269,60 +252,19 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
         })
     return recipes
 
-def nlp_v1(text: str):
-    doc = nlp(text)
-    print("Processed Text:", doc)
-
-    # Extended list of exclusion terms (e.g., 'no', 'without')
-    json_file_exclusion_keywords = "./data/exclusion_keywords.json"
-    with open(json_file_exclusion_keywords, "r", encoding="utf-8") as f:
-        exclusion_keywords = json.load(f)
-    # json_file_food_allergens = "./data/food_allergens.json"
-    # with open(json_file_food_allergens, "r", encoding="utf-8") as f:
-    #     food_allergens = json.load(f)
-
-    # Extract the words that follow negation keywords
-    exclusions = []
-
-    # First loop to extract exclusions
-    for token in doc:
-        if token.text.lower() in exclusion_keywords['exclusion_keywords']:
-            if token.i + 1 < len(doc):  # Check if the next token exists
-                exclusions.append(doc[token.i + 1].text.lower())
-
-    # Construct the sentence while excluding the exclusion words
-    final_sentence = []
-
-    for token in doc:
-        if token.text.lower() not in exclusions and token.pos_ != "PUNCT" and token.pos_ != "DET":
-            final_sentence.append(token.text)
-
-    # Convert the list to a sentence
-    final_sentence = " ".join(final_sentence).capitalize()
-
-    # Output the results
-    print("Final sentence without exclusions:", final_sentence)
-    print("Exclusions detected:", exclusions)
-
-    important_words = []
-
-    test = nlp(final_sentence)
-    for token in test:
-        # Focus on Nouns, Proper Nouns, and Adjectives
-        if token.pos_ in ["NOUN", "PROPN", "ADJ"]:
-            important_words.append(token)
-
-    # Convert the list of important words to a string
-    important_sentence = " ".join([word.text for word in important_words])
-
-    # Output the results
-    print("Important words from the sentence:", important_sentence)
-
-    return important_sentence, exclusions
-
-def nlp_v2(input: str):
+def nlp_text_preprocessing(input: str):
     try:
-        prompt = f"Extract the important parts and exclusions from the following text. Exclusions can be specified as things to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). Important parts are the ingredients or key items to include. Output the important parts and exclusions as separate lists, in the following format:\n\nImportant parts: [item1, item2, ...]\nExclusions: [item1, item2, ...]\n\nText: {input}"
+        prompt = (
+            f"Extract the important parts and exclusions from the following text. "
+            f"Important parts are the ingredients or key items to include, and exclusions are things to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). "
+            f"Output the important parts and exclusions as separate lists, and then create a concise, single-sentence response that is purely based on the input, starting with 'Here are some recipes for ...'. The sentence must directly address the important parts and exclusions, without adding unrelated text.\n\n"
+            f"Format:\n"
+            f"Important parts: [item1, item2, ...]\n"
+            f"Exclusions: [item1, item2, ...]\n"
+            f"Answer: [One concise sentence starting with 'Here are some recipes for ...']\n\n"
+            f"Text: {input}"
+        )
+
         
         response = model.generate_content(
             prompt,
@@ -333,29 +275,26 @@ def nlp_v2(input: str):
         )
 
         print("Response from LLM:", response.text)
-        response = response.text
-        # Use regex to extract the lists of important parts and exclusions
-        important_parts_match = re.search(r"Important parts:\s*\[(.*?)\]", response, re.IGNORECASE)
-        exclusions_match = re.search(r"Exclusions:\s*\[(.*?)\]", response, re.IGNORECASE)
+        response_text = response.text
 
-        print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        
-        # Convert the matches to lists
+        # Extract important parts
+        important_parts_match = re.search(r"Important parts:\s*\[(.*?)\]", response_text, re.IGNORECASE)
         important_parts = important_parts_match.group(1).split(", ") if important_parts_match else []
+
+        # Extract exclusions
+        exclusions_match = re.search(r"Exclusions:\s*\[(.*?)\]", response_text, re.IGNORECASE)
         exclusions = exclusions_match.group(1).split(", ") if exclusions_match else []
 
-        print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
-        
-        # Remove any extra whitespace or quotes
+        # Extract answer sentence
+        answer_match = re.search(r"Answer:\s*(Here are some recipes for .*?)\n", response_text, re.IGNORECASE)
+        answer_sentence = answer_match.group(1).strip() if answer_match else "No answer provided."
+
+        # Clean lists
         important_parts = [item.strip().strip('"').strip("'") for item in important_parts]
-        if not important_parts:
-            important_parts = []
-        important_sentence = " ".join([word for word in important_parts])
         exclusions = [item.strip().strip('"').strip("'") for item in exclusions]
-        if not exclusions:
-            exclusions = []
-        print('cccccccccccccccccccccccccccccccc')
-        return important_sentence, exclusions
+
+        print("Answer from LLM:" + answer_sentence)
+        return important_parts, exclusions, answer_sentence
     except Exception as e:
         print(f"Error in LLM: {str(e)}")
         return "", []

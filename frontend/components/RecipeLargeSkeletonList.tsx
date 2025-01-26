@@ -48,8 +48,8 @@ export function RecipeLargeSkeletonList({ count }: { count: number }) {
                 <ThemedText
                   style={{
                     ...styles.skeletonText,
-                    height: 32,
-                    width: 60,
+                    height: 24,
+                    width: 48,
                     borderRadius: 16,
                   }}
                 ></ThemedText>
