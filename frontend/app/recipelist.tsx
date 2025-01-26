@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
-import { VirtualizedList, Pressable, StyleSheet, Platform, useColorScheme } from 'react-native';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
+import { VirtualizedList, Pressable, StyleSheet, useColorScheme } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
@@ -20,7 +20,6 @@ export default function RecipeListScreen() {
   const colorScheme = useColorScheme();
   const [isVisible, setIsVisible] = useState(false);
   const listRef = useRef<VirtualizedList<Recipe>>(null);
-  const MemoizedRecipeLarge = memo(RecipeLarge);
 
   useEffect(() => {
     const getPopularRecipes = async () => {
@@ -104,58 +103,42 @@ export default function RecipeListScreen() {
     router.back();
   };
 
-  const handleScroll = (event: any) => {
-    const contentOffsetY = event.nativeEvent.contentOffset.y;
-    setIsVisible(contentOffsetY > 100);
-  };
+  const handleScroll = useCallback((event: any) => {
+    setIsVisible(event.nativeEvent.contentOffset.y > 100);
+  }, []);
 
-  const handleScrollToTop = () => {
-    if (listRef.current) {
-      listRef.current.scrollToOffset({ animated: true, offset: 0 });
-    }
-  };
+  const handleScrollToTop = useCallback(() => {
+    listRef.current?.scrollToOffset({ animated: true, offset: 0 });
+  }, []);
 
-  const getItem = (data: any, index: any) => data[index];
-  const getItemCount = (data: any) => data.length;
+  const renderItem = useCallback(({ item }: { item: Recipe }) => <RecipeLarge recipe={item} />, []);
+
+  const keyExtractor = useCallback((item: Recipe) => item.Id.toString(), []);
+
+  const getItem = useCallback((data: Recipe[], index: number) => data[index], []);
+  const getItemCount = useCallback((data: Recipe[]) => data.length, []);
+
+  const ScrollToTopButton = memo(({ isVisible, onPress }: { isVisible: boolean; onPress: () => void }) => {
+    if (!isVisible) return null;
+    return (
+      <Pressable onPress={onPress} style={[styles.scrollToTopButton, { backgroundColor: Colors[colorScheme ?? 'light'].primary }]}>
+        <MaterialIcons name="arrow-upward" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
+      </Pressable>
+    );
+  });
 
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <Pressable onPress={handleBackButton} style={styles.icon}>
+        <Pressable onPress={() => router.back()} style={styles.icon}>
           <MaterialIcons name="arrow-back" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
         </Pressable>
         <ThemedText style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center' }}>{title}</ThemedText>
       </ThemedView>
 
-      {recipeList.length === 0 ? (
-        // Show skeleton cards while loading
-        <VirtualizedList
-          data={new Array(10)} // Create 10 skeleton cards
-          keyExtractor={(item, index) => index.toString()}
-          getItem={getItem}
-          getItemCount={getItemCount}
-          renderItem={() => <RecipeLargeSkeleton />}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
-        <VirtualizedList
-          ref={listRef}
-          data={recipeList}
-          keyExtractor={(item) => item.Id.toString()}
-          getItem={getItem}
-          getItemCount={getItemCount}
-          renderItem={({ item }) => <MemoizedRecipeLarge recipe={item} />}
-          showsVerticalScrollIndicator={false}
-          onScroll={handleScroll}
-        />
-      )}
+      {recipeList.length === 0 ? <VirtualizedList data={new Array(10)} keyExtractor={(_, index) => index.toString()} getItem={getItem} getItemCount={getItemCount} renderItem={() => <RecipeLargeSkeleton />} showsVerticalScrollIndicator={false} /> : <VirtualizedList ref={listRef} data={recipeList} keyExtractor={keyExtractor} getItem={getItem} getItemCount={getItemCount} renderItem={renderItem} onScroll={handleScroll} showsVerticalScrollIndicator={false} />}
 
-      {/* Scroll to top button */}
-      {isVisible && (
-        <Pressable onPress={handleScrollToTop} style={{ ...styles.scrollToTopButton, backgroundColor: Colors[colorScheme ?? 'light'].primary }}>
-          <MaterialIcons name="arrow-upward" size={24} color={Colors[colorScheme ?? 'light'].iconSecondary} />
-        </Pressable>
-      )}
+      <ScrollToTopButton isVisible={isVisible} onPress={handleScrollToTop} />
     </ThemedView>
   );
 }
@@ -175,6 +158,7 @@ const styles = StyleSheet.create({
   icon: {
     position: 'absolute',
     left: 8,
+    zIndex: 1,
   },
   scrollToTopButton: {
     position: 'absolute',

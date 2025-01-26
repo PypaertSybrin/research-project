@@ -168,6 +168,7 @@ export default function SearchScreen() {
               </Animated.View>
             )}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 112 }}
           />
         )}
       </ThemedView>
