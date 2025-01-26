@@ -12,11 +12,9 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
     const isPrepared = audioRecordingRef?.current?._canRecord;
     if (isPrepared) {
       await audioRecordingRef?.current?.stopAndUnloadAsync();
-      console.log('Recording stopped and unloaded');
+
       const recordingUri = audioRecordingRef?.current?.getURI() || '';
       let base64Uri = '';
-
-      console.log('Recording URI:', recordingUri);
 
       base64Uri = await FileSystem.readAsStringAsync(recordingUri, {
         encoding: FileSystem.EncodingType.Base64,
@@ -33,13 +31,7 @@ export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio
       };
 
       if (recordingUri && dataUrl) {
-        console.log('Transcribing speech...');
-        console.log('dataUrl:', dataUrl);
-        console.log('audioConfig:', audioConfig.encoding, audioConfig.sampleRateHertz, audioConfig.languageCode);
-        // const rootOrigin = Platform.OS === 'android' ? '10.0.2.2' : Device.isDevice ? process.env.LOCAL_DEV_IP || 'localhost' : 'localhost';
-        // const serverUrl = `http://${rootOrigin}:8000`;
         const backendUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
-        // if android, this url, else, other url
         const response = await fetch(`${backendUrl}:8000/get-recipes`, {
           method: 'POST',
           headers: {

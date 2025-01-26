@@ -5,13 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import dotenv
 import requests
-import spacy
 import google.generativeai as genai
 import re
-
-
-nlp = spacy.load("en_core_web_sm")
-# TODO: spacy uit requirements file halen
 
 # Initialize FastAPI
 app = FastAPI()
@@ -78,25 +73,7 @@ async def get_recipes(req: Request):
             # Access the first alternative's transcript and add it to the converted_text
             converted_text += result['alternatives'][0]['transcript']
 
-        # converted_text = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
-        # print(f"Converted Text: {converted_text}")
-
-        # converted_text = "Do you have some smoothie recipes that are healthy and easy to make?"
-        # converted_text = "I would like some sushi"
-        # converted_text = "sushi recipes"
-        # answer = ""
-
-        # important_sentence, exclusions = nlp_v1(converted_text)
-
-        important_sentence, exclusions, answer = nlp_v2(converted_text)
-        # print(answer)
-
-        # print(f"Important Sentence: {important_sentence}")
-        # print(f"Exclusions: {exclusions}")
-
-        # exclusions = []
-        # important_sentence = "so I have some egg milk and butter laying in my fridge and I would like to know what I can make with that"
-        
+        important_sentence, exclusions, answer = nlp_text_preprocessing(converted_text)
 
         # Build the filter using $and to combine the exclusion terms
         if not exclusions or exclusions == [""]:
@@ -275,58 +252,7 @@ def add_recipes_to_list(doc_results, meta_results, needs_sorting, likeRecipeIds=
         })
     return recipes
 
-def nlp_v1(text: str):
-    doc = nlp(text)
-    print("Processed Text:", doc)
-
-    # Extended list of exclusion terms (e.g., 'no', 'without')
-    json_file_exclusion_keywords = "./data/exclusion_keywords.json"
-    with open(json_file_exclusion_keywords, "r", encoding="utf-8") as f:
-        exclusion_keywords = json.load(f)
-    # json_file_food_allergens = "./data/food_allergens.json"
-    # with open(json_file_food_allergens, "r", encoding="utf-8") as f:
-    #     food_allergens = json.load(f)
-
-    # Extract the words that follow negation keywords
-    exclusions = []
-
-    # First loop to extract exclusions
-    for token in doc:
-        if token.text.lower() in exclusion_keywords['exclusion_keywords']:
-            if token.i + 1 < len(doc):  # Check if the next token exists
-                exclusions.append(doc[token.i + 1].text.lower())
-
-    # Construct the sentence while excluding the exclusion words
-    final_sentence = []
-
-    for token in doc:
-        if token.text.lower() not in exclusions and token.pos_ != "PUNCT" and token.pos_ != "DET":
-            final_sentence.append(token.text)
-
-    # Convert the list to a sentence
-    final_sentence = " ".join(final_sentence).capitalize()
-
-    # Output the results
-    print("Final sentence without exclusions:", final_sentence)
-    print("Exclusions detected:", exclusions)
-
-    important_words = []
-
-    test = nlp(final_sentence)
-    for token in test:
-        # Focus on Nouns, Proper Nouns, and Adjectives
-        if token.pos_ in ["NOUN", "PROPN", "ADJ"]:
-            important_words.append(token)
-
-    # Convert the list of important words to a string
-    important_sentence = " ".join([word.text for word in important_words])
-
-    # Output the results
-    print("Important words from the sentence:", important_sentence)
-
-    return important_sentence, exclusions
-
-def nlp_v2(input: str):
+def nlp_text_preprocessing(input: str):
     try:
         prompt = (
             f"Extract the important parts and exclusions from the following text. "

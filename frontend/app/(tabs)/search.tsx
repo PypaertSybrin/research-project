@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList, Text } from 'react-native';
+import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList } from 'react-native';
 import { Audio } from 'expo-av';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import { recordSpeech } from '@/functions/recordSpeech';
