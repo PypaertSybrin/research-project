@@ -47,10 +47,6 @@ async def get_recipes(req: Request):
             print("audioConfig is required")
             return JSONResponse(content={"error": "audioConfig is required"}, status_code=400)
 
-        # Perform speech-to-text conversion (logic placeholder)
-        print(f"Performing speech to text conversion for audio URL: {audioUrl}")
-        print(f"Audio Config: {audioConfig}")
-
         response = requests.post("https://speech.googleapis.com/v1/speech:recognize", json={
             "config": {
                 "encoding": audioConfig["encoding"],
@@ -75,22 +71,27 @@ async def get_recipes(req: Request):
 
         important_sentence, exclusions, answer = nlp_text_preprocessing(converted_text)
 
+        exclusions = [exclusion.lower() for exclusion in exclusions]  # Lowercase version
+        exclusions_with_capitalized_first = [exclusion.capitalize() for exclusion in exclusions]  # Capitalized first letter
+
+        # Combine both lowercase and capitalized versions
+        all_exclusions = exclusions + exclusions_with_capitalized_first
+        print("All exclusions:", all_exclusions)
+
         # Build the filter using $and to combine the exclusion terms
-        if not exclusions or exclusions == [""]:
+        if not all_exclusions or all_exclusions == [""]:
             results = collection.query(query_texts=important_sentence, n_results=50)
-        elif len(exclusions) == 1:
-            results = collection.query(query_texts=important_sentence, n_results=50, where_document={"$not_contains": exclusions[0]})
         else:
             filters = {"$and": []}
             # Add each exclusion as a $not_contains condition for Ingredients
-            for exclusion in exclusions:
+            for exclusion in all_exclusions:
                 filters["$and"].append({"$not_contains": exclusion})
             results = collection.query(query_texts=important_sentence, n_results=50, where_document=filters)
-        # If distance is less than 0.5, then it is a good match
+
         filtered_results = {"documents": [], "metadatas": []}
         for idx, distance in enumerate(results["distances"][0]):
             print(distance)
-            if distance < 1.2:
+            if distance < 0.9:
                 filtered_results["documents"].append(results["documents"][0][idx])
                 filtered_results["metadatas"].append(results["metadatas"][0][idx])
         print(len(filtered_results["documents"]))
@@ -256,16 +257,19 @@ def nlp_text_preprocessing(input: str):
     try:
         prompt = (
             f"Extract the important parts and exclusions from the following text. "
-            f"Important parts are the ingredients or key items to include, and exclusions are things to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). "
-            f"Output the important parts and exclusions as separate lists, and then create a concise, single-sentence response that is purely based on the input, starting with 'Here are some recipes for ...'. The sentence must directly address the important parts and exclusions, without adding unrelated text.\n\n"
+            f"Important parts include the main context (e.g., meal type like 'breakfast', 'lunch'), ingredients, or key items to include. "
+            f"Exclusions are things explicitly mentioned to avoid (e.g., 'I am allergic to milk' or 'without vegetables'). "
+            f"Please make sure exclusions are clearly listed as items that should not appear in recipes. "
+            f"Generate a short, clear, and focused sentence that highlights the key ingredients and context, while avoiding unnecessary details. "
+            f"The important sentence should be query-friendly, suitable for searching recipes or ingredients in a database.\n\n"
             f"Format:\n"
-            f"Important parts: [item1, item2, ...]\n"
-            f"Exclusions: [item1, item2, ...]\n"
-            f"Answer: [One concise sentence starting with 'Here are some recipes for ...']\n\n"
+            f"Important sentence: [Concise and query-friendly sentence summarizing the key context and ingredients]\n"
+            f"Exclusions: [exclusion1, exclusion2, ...]\n"
+            f"Answer: [One concise sentence to query the database, starting with 'Here are some recipes for ...']\n\n"
             f"Text: {input}"
         )
 
-        
+        # Call model to generate content
         response = model.generate_content(
             prompt,
             generation_config=genai.GenerationConfig(
@@ -277,24 +281,36 @@ def nlp_text_preprocessing(input: str):
         print("Response from LLM:", response.text)
         response_text = response.text
 
-        # Extract important parts
-        important_parts_match = re.search(r"Important parts:\s*\[(.*?)\]", response_text, re.IGNORECASE)
-        important_parts = important_parts_match.group(1).split(", ") if important_parts_match else []
+        # Use regex to capture important sentence more flexibly
+        important_parts_match = re.search(r"Important sentence:\s*(.*?)(?=\n|$)", response_text, re.IGNORECASE)
+        important_sentence = important_parts_match.group(1).strip() if important_parts_match else ""
 
-        # Extract exclusions
-        exclusions_match = re.search(r"Exclusions:\s*\[(.*?)\]", response_text, re.IGNORECASE)
-        exclusions = exclusions_match.group(1).split(", ") if exclusions_match else []
+        # Extract exclusions list (this part is enhanced to handle different formats)
+        exclusions_match = re.search(r"Exclusions:\s*(.*?)(?=\n|$)", response_text, re.IGNORECASE)
 
-        # Extract answer sentence
-        answer_match = re.search(r"Answer:\s*(Here are some recipes for .*?)\n", response_text, re.IGNORECASE)
-        answer_sentence = answer_match.group(1).strip() if answer_match else "No answer provided."
+        exclusions = []
+        if exclusions_match:
+            exclusions_raw = exclusions_match.group(1).strip()
+            # If exclusions are a single word without commas, we treat it as one exclusion
+            if exclusions_raw and exclusions_raw != "none":
+                exclusions = [exclusions_raw] if "," not in exclusions_raw else [item.strip() for item in exclusions_raw.split(",")]
 
-        # Clean lists
-        important_parts = [item.strip().strip('"').strip("'") for item in important_parts]
+        # Clean up the exclusions list to remove any leading/trailing spaces
         exclusions = [item.strip().strip('"').strip("'") for item in exclusions]
 
-        print("Answer from LLM:" + answer_sentence)
-        return important_parts, exclusions, answer_sentence
+        # If exclusions are still a string, make it a list
+        if isinstance(exclusions, str):
+            exclusions = [exclusions.strip()]
+
+        # Extract the query sentence
+        answer_match = re.search(r"Answer:\s*(Here are some recipes for .+?)(?=\n|$)", response_text, re.IGNORECASE)
+        answer_sentence = answer_match.group(1).strip() if answer_match else "No answer provided."
+
+        print("Important parts:", important_sentence)
+        print("Exclusions:", exclusions)
+        print("Answer:", answer_sentence)
+
+        return important_sentence, exclusions, answer_sentence
     except Exception as e:
         print(f"Error in LLM: {str(e)}")
         return "", []
