@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme, Animated, VirtualizedList } from 'react-native';
-import { Audio } from 'expo-av';
+import { StyleSheet, ActivityIndicator, TouchableOpacity, Animated, VirtualizedList } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync, useAudioRecorder } from 'expo-audio';
+import { RECORDING_OPTIONS } from '@/constants/RecordingOptions';
 import { transcribeSpeech } from '@/functions/transcribeSpeech';
 import { recordSpeech } from '@/functions/recordSpeech';
 import { ThemedView } from '@/components/ThemedView';
@@ -16,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SearchScreen() {
   const [isRecording, setIsRecording] = useState(false);
-  const audioRecordingRef = useRef(new Audio.Recording());
+  const audioRecorder = useAudioRecorder(RECORDING_OPTIONS);
   const [responseRecipes, setResponseRecipes] = useState<Recipe[]>([]);
   const [permission, setPermission] = useState({ status: 'undetermined' });
   const [animations, setAnimations] = useState<Animated.Value[]>([]);
@@ -28,9 +30,9 @@ export default function SearchScreen() {
 
   useEffect(() => {
     const requestOrGetPermissions = async () => {
-      setPermission(await Audio.getPermissionsAsync());
+      setPermission(await getRecordingPermissionsAsync());
       if (permission.status === 'undetermined') {
-        setPermission(await Audio.requestPermissionsAsync());
+        setPermission(await requestRecordingPermissionsAsync());
       }
     };
     requestOrGetPermissions();
@@ -46,7 +48,7 @@ export default function SearchScreen() {
   const startRecording = async () => {
     if (permission.status === 'granted') {
       setIsRecording(true);
-      await recordSpeech(audioRecordingRef, setIsRecording);
+      await recordSpeech(audioRecorder, setIsRecording);
     }
   };
 
@@ -57,7 +59,7 @@ export default function SearchScreen() {
     setResponseRecipes([]);
     setUserInput('...');
     try {
-      const data = await transcribeSpeech(audioRecordingRef);
+      const data = await transcribeSpeech(audioRecorder);
       if (data === undefined) {
         setHasNotRecordedYet(true);
         setUserInput('...');

@@ -2,6 +2,11 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    // TypeScript 6 no longer pulls in `node_modules/@types/*` globals automatically,
+    // so the test runner's globals (`it`, `expect`, ...) have to be listed here.
+    "types": [
+      "jest"
+    ],
     "paths": {
       "@/*": [
         "./*"

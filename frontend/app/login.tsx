@@ -2,9 +2,9 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  useColorScheme,
   Text,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';

@@ -1,7 +1,8 @@
 import { Recipe } from '@/constants/Recipe';
 import { ThemedView } from './ThemedView';
 import { Image } from 'expo-image';
-import { StyleSheet, useColorScheme, View, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemedText } from './ThemedText';
 import { Colors } from '@/constants/Colors';
 import { useState } from 'react';
