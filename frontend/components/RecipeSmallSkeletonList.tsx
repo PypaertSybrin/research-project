@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Animated, useColorScheme } from 'react-native';
+import { StyleSheet, View, Animated } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 
 export function RecipeSmallSkeletonList({ count }: { count: number }) {

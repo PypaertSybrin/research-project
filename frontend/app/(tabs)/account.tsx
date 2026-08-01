@@ -3,12 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Recipe } from '@/constants/Recipe';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { useColorScheme, View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { router, useFocusEffect } from 'expo-router';
 import React from 'react';
 import { RecipeMedium } from '@/components/RecipeMedium';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useBottomTabBarHeight } from '@/hooks/bottomTabs';
 
 export default function AccountScreen() {
   const colorScheme = useColorScheme();

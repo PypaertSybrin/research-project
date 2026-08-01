@@ -1,4 +1,5 @@
-import { StyleSheet, ScrollView, useColorScheme, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { CategoryCard } from '@/components/CategoryCard';

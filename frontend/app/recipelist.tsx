@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
-import { VirtualizedList, Pressable, StyleSheet, useColorScheme } from 'react-native';
+import { VirtualizedList, Pressable, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';

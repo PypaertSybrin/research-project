@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
-import { Platform, useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 import { HapticTab } from '@/components/HapticTab';
 // import { IconSymbol } from '@/components/ui/IconSymbol';

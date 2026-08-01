@@ -1,28 +1,23 @@
-import { Audio } from 'expo-av';
-import { MutableRefObject } from 'react';
-import * as FileSystem from 'expo-file-system';
+import { AudioRecorder, setAudioModeAsync } from 'expo-audio';
+import { File } from 'expo-file-system';
 import { Platform } from 'react-native';
 
-export const transcribeSpeech = async (audioRecordingRef: MutableRefObject<Audio.Recording>) => {
+export const transcribeSpeech = async (audioRecorder: AudioRecorder) => {
   try {
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      playsInSilentModeIOS: false,
+    await setAudioModeAsync({
+      allowsRecording: false,
+      playsInSilentMode: false,
     });
-    const isPrepared = audioRecordingRef?.current?._canRecord;
+    const isPrepared = audioRecorder.getStatus().canRecord;
     if (isPrepared) {
-      await audioRecordingRef?.current?.stopAndUnloadAsync();
+      await audioRecorder.stop();
 
-      const recordingUri = audioRecordingRef?.current?.getURI() || '';
+      const recordingUri = audioRecorder.uri || '';
       let base64Uri = '';
 
-      base64Uri = await FileSystem.readAsStringAsync(recordingUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      base64Uri = await new File(recordingUri).base64();
 
       const dataUrl = base64Uri;
-
-      audioRecordingRef.current = new Audio.Recording();
 
       const audioConfig = {
         encoding: Platform.OS === 'android' ? 'AMR_WB' : 'LINEAR16',

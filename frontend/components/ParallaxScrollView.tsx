@@ -1,5 +1,6 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import Animated, { interpolate, useAnimatedRef, useAnimatedStyle, useScrollViewOffset } from 'react-native-reanimated';
 import { ThemedView } from '@/components/ThemedView';
 import { useRouter } from 'expo-router';
